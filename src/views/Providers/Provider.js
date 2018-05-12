@@ -1,0 +1,592 @@
+import React from "react";
+import ReactDOM from "react-dom";
+import {
+  Grid,
+  GridColumn,
+  GridCell,
+  GridToolbar
+} from "@progress/kendo-react-grid";
+import { DropDownList } from "@progress/kendo-react-dropdowns";
+import Socket from "../../socket";
+// import { sampleProducts } from './sample-products.jsx';
+
+class DropDownCell extends GridCell {
+  handleChange(e) {
+    this.props.onChange({
+      dataItem: this.props.dataItem,
+      field: this.props.field,
+      syntheticEvent: e.syntheticEvent,
+      value: e.target.value
+    });
+  }
+  render() {
+    const value = this.props.dataItem[this.props.field];
+
+    if (!this.props.dataItem.inEdit) {
+      return (
+        <td>
+          {value === null
+            ? ""
+            : this.props.dataItem[this.props.field].toString()}
+        </td>
+      );
+    }
+
+    return (
+      <td>
+        <DropDownList
+          style={{ width: "100px" }}
+          onChange={this.handleChange.bind(this)}
+          value={value}
+          data={[
+            { text: "yes", value: true },
+            { text: "no", value: false },
+            { text: "(empty)", value: null }
+          ]}
+          valueField="value"
+          textField="text"
+        />
+      </td>
+    );
+  }
+}
+
+let responseProviders = [];
+
+class Provider extends React.Component {
+  constructor(props) {
+    super(props);
+    // set some constants
+    this.defaultPageSize = 25;
+    this.defaultButtonCount = 5;
+    // using bind of the javascript to bind this object to class level functions
+    this.callbackRead = this.callbackRead.bind(this);
+    this.callbackDelete = this.callbackDelete.bind(this);
+    this.updateOwnerState = this.updateOwnerState.bind(this);
+    // emit provider read request via socket.io,
+    // set the callback func to process the response
+    Socket.emit(
+      "provider:read",
+      JSON.stringify({
+        skip: 0,
+        limit: this.defaultPageSize,
+        search: {
+          ownership: 0
+        }
+      }),
+      this.callbackRead
+    );
+
+    this.state = {
+      skip: 0,
+      data: [],
+      limit: this.defaultPageSize,
+      pagerState: {
+        info: true,
+        type: "numeric",
+        pageSizes: [5, 10, 25, 50, 75, 100],
+        previousNext: true,
+        pageSize: this.defaultPageSize,
+        buttonCount: this.defaultButtonCount
+      },
+      searchState: {
+        ownership: 0
+      }
+    };
+
+    this.enterInsert = this.enterInsert.bind(this);
+    this.itemChange = this.itemChange.bind(this);
+
+    const enterEdit = this.enterEdit.bind(this);
+    const save = this.save.bind(this);
+    const cancel = this.cancel.bind(this);
+    const remove = this.remove.bind(this);
+
+    class MyCommandCell extends GridCell {
+      render() {
+        return !this.props.dataItem.inEdit ? (
+          <td>
+            <button
+              className="k-primary k-button k-grid-edit-command"
+              onClick={() => enterEdit(this.props.dataItem)}
+            >
+              Edit
+            </button>
+            <button
+              className="k-button k-grid-remove-command"
+              onClick={() =>
+                window.confirm(
+                  "Confirm deleting: " + this.props.dataItem.name
+                ) && remove(this.props.dataItem)
+              }
+            >
+              Remove
+            </button>
+          </td>
+        ) : (
+          <td>
+            <button
+              className="k-button k-grid-save-command"
+              onClick={() => save(this.props.dataItem)}
+            >
+              {this.props.dataItem.id ? "Update" : "Add"}
+            </button>
+            <button
+              className="k-button k-grid-cancel-command"
+              onClick={() => cancel(this.props.dataItem)}
+            >
+              {this.props.dataItem.id ? "Cancel" : "Discard"}
+            </button>
+          </td>
+        );
+      }
+    }
+
+    this.CommandCell = MyCommandCell;
+  }
+
+  callbackRead(stringResponse) {
+    // parse the response
+    const response = JSON.parse(stringResponse);
+
+    console.log(
+      "[Provider.funcResponseCallback] response.providers.length:",
+      response.providers.length
+    );
+
+    if (response === null) {
+      // TODO: handle this issue by a timeout and
+      // calling the pull request again
+      return;
+    }
+
+    // set the responseProvider variable as a clone of the handler response
+    responseProviders = response.providers.slice(0);
+
+    this.setState({
+      data: response.providers.slice(0),
+      total: response.total,
+      skip: response.skip,
+      pageSize: response.providers.length,
+      pagerState: Object.assign({}, this.state.pagerState, {
+        pageSize: response.providers.length
+      })
+    });
+  }
+
+  callbackSave(stringResponse) {
+    let response = JSON.parse(stringResponse);
+
+    console.log("[Provider.callbackSave] objectResponse:", response);
+
+    if (response.code != 200) {
+    }
+  }
+
+  callbackDelete(stringResponse) {
+    // dataItem.inEdit = undefined;
+    // dataItem.deleted = true;
+    // this.update(this.providerArray, dataItem, true);
+    // this.setState({
+    //   arrayProvider: this.state.arrayProvider.slice()
+    // });
+    console.log("[Provider.callbackDelete] stringResponse: ", stringResponse);
+  }
+
+  enterInsert() {
+    const dataItem = {
+      inEdit: true,
+      Discontinued: false
+    };
+
+    console.log("[Provider.enterInsert] dataItem:", dataItem);
+
+    const newProviders = this.state.data.slice();
+    newProviders.unshift(dataItem);
+
+    this.update(newProviders, dataItem);
+
+    this.setState({
+      data: newProviders
+    });
+  }
+
+  enterEdit(dataItem) {
+    console.log("[Provider.enterEdit] dataItem:", dataItem);
+
+    this.update(this.state.data, dataItem).inEdit = true;
+    this.setState({
+      data: this.state.data.slice()
+    });
+  }
+
+  save(dataItem) {
+    console.log("[Provider.save] dataItem:", dataItem);
+
+    dataItem.inEdit = undefined;
+    dataItem.id = this.update(responseProviders, dataItem).id;
+
+    this.setState({
+      data: this.state.data.slice()
+    });
+    // SocketIOClient.emit('provider:delete', JSON.stringify({ id: dataItem.id }),
+    //   this.funcSaveCallback.b
+    // );
+  }
+
+  cancel(dataItem) {
+    console.log("[Provider.cancel] dataItem:", dataItem);
+
+    if (dataItem.id) {
+      let originalItem = responseProviders.find(p => p.id === dataItem.id);
+      this.update(this.state.data, originalItem);
+    } else {
+      this.update(this.state.data, dataItem, !dataItem.id);
+    }
+    this.setState({
+      data: this.state.data.slice()
+    });
+  }
+
+  remove(dataItem) {
+    console.log("[Provider.remove] dataItem:", dataItem);
+
+    dataItem.inEdit = undefined;
+
+    this.update(this.state.data, dataItem, true);
+    this.update(responseProviders, dataItem, true);
+
+    this.setState({
+      data: this.state.data.slice()
+    });
+
+    Socket.emit(
+      "provider:delete",
+      JSON.stringify({
+        id: dataItem.id
+      }),
+      this.callbackDelete
+    );
+  }
+
+  itemChange(event) {
+    console.log("[Provider.itemChange] event:", event);
+
+    const value = event.value;
+    const name = event.field;
+    if (!name) {
+      return;
+    }
+
+    const updatedData = this.state.data.slice();
+    const item = this.update(updatedData, event.dataItem);
+    item[name] = value;
+
+    this.setState({
+      data: updatedData
+    });
+  }
+
+  update(data, item, remove) {
+    console.log("[Provider.update] item:", item, "remove:", remove);
+
+    let updated;
+    let index = data.findIndex(
+      p => p === item || (item.id && p.id === item.id)
+    );
+
+    if (index >= 0) {
+      updated = Object.assign({}, item);
+      data[index] = updated;
+    } else {
+      let id = 1;
+      // data.forEach(p => { id = Math.max(p.ProductID + 1, id); });
+      updated = Object.assign({}, item, { id: id });
+      data.unshift(updated);
+      index = 0;
+    }
+
+    if (remove) {
+      return data.splice(index, 1)[0];
+    }
+
+    return data[index];
+  }
+
+  onPageChange(e) {
+    console.log("[Provider.eventOnPageChange] this:", this, "e:", e);
+
+    Socket.emit(
+      "provider:read",
+      JSON.stringify({
+        skip: e.page.skip,
+        limit: e.page.take,
+        search: this.state.searchState
+      }),
+      this.callbackRead
+    );
+  }
+
+  updatePagerState(key, value) {
+    console.log("[Provider.funcUpdatePagerState] key:", key, "value:", value);
+
+    const newPagerState = Object.assign({}, this.state.pagerState, {
+      [key]: value
+    });
+
+    this.setState(
+      Object.assign({}, this.state, {
+        pagerState: newPagerState
+      })
+    );
+  }
+
+  updateOwnerState(key, value) {
+    console.log(
+      "[Provider.funcUpdateOwnershipState] key:",
+      key,
+      "value:",
+      value
+    );
+
+    this.state.searchState.ownership = parseInt(value);
+
+    console.log(
+      "[Provider.funcUpdateOwnershipState] after update",
+      "this.state.objectSearchState:",
+      this.state.searchState
+    );
+
+    Socket.emit(
+      "provider:read",
+      JSON.stringify({
+        skip: 0,
+        limit: this.defaultPageSize,
+        search: this.state.searchState
+      }),
+      this.callbackRead
+    );
+  }
+
+  render() {
+    return (
+      <div>
+        <div className="col-md-12">
+          <dl>
+            <dt>Ownership status filter:</dt>
+            <dd>
+              <input
+                type="radio"
+                name="ownership"
+                id="ownershipTemplate"
+                className="k-radio"
+                value="1"
+                onChange={e => {
+                  this.updateOwnerState("type", e.target.value);
+                }}
+              />
+              <label
+                style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
+                className="k-radio-label"
+                htmlFor="ownershipTemplate"
+              >
+                Template (from excel file)&nbsp;
+              </label>
+              <input
+                type="radio"
+                name="ownership"
+                id="ownershipRegistered"
+                className="k-radio"
+                value="2"
+                onChange={e => {
+                  this.updateOwnerState("type", e.target.value);
+                }}
+              />
+              <label
+                style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
+                className="k-radio-label"
+                htmlFor="ownershipRegistered"
+              >
+                Registered&nbsp;
+              </label>
+              <input
+                defaultChecked={true}
+                type="radio"
+                name="ownership"
+                id="ownershipAll"
+                className="k-radio"
+                value="0"
+                onChange={e => {
+                  this.updateOwnerState("type", e.target.value);
+                }}
+              />
+              <label
+                style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
+                className="k-radio-label"
+                htmlFor="ownershipAll"
+              >
+                All (no filter)&nbsp;
+              </label>
+            </dd>
+          </dl>
+        </div>
+        <Grid
+          data={this.state.data}
+          pageChange={this.onPageChange.bind(this)}
+          skip={this.state.skip}
+          total={this.state.total}
+          pageable={this.state.pagerState}
+          pageSize={this.state.pageSize}
+          itemChange={this.itemChange}
+          style={{ maxHeight: "980px" }}
+          editField="inEdit"
+        >
+          <GridToolbar>
+            <button
+              title="Add new"
+              className="k-button k-primary"
+              onClick={this.enterInsert}
+            >
+              Add new
+            </button>
+            {this.state.data.filter(p => p.inEdit).length > 0 && (
+              <button
+                title="Cancel current changes"
+                className="k-button"
+                onClick={() =>
+                  this.setState({ data: responseProviders.slice() })
+                }
+              >
+                Cancel current changes
+              </button>
+            )}
+          </GridToolbar>
+          <GridColumn field="id" title="Id" editable={false} />
+          <GridColumn field="name" title="Name" />
+          <GridColumn
+            field="isConfirmed"
+            title="IsConfirmed"
+            editor="boolean"
+          />
+          <GridColumn field="categories" title="Categories" />
+          <GridColumn field="latitude" title="Latitude" editor="numeric" />
+          <GridColumn field="longitude" title="Longitude" editor="numeric" />
+
+          {/* <GridColumn field="ProductID" title="Id" width="50px" editable={false} />
+          <GridColumn field="ProductName" title="Product Name" />
+          <GridColumn field="FirstOrderedOn" title="First Ordered" 
+            editor="date" format="{0:d}" />
+          <GridColumn field="UnitsInStock" title="Units" editor="numeric" />
+          <GridColumn field="Discontinued" cell={DropDownCell} /> */}
+          <GridColumn cell={this.CommandCell} width="220px" />
+        </Grid>
+        <div className="example-config row">
+          <div className="col-md-6">
+            <dl>
+              <dt>Pager type:</dt>
+              <dd>
+                <input
+                  type="radio"
+                  name="pager"
+                  id="numeric"
+                  className="k-radio"
+                  value="numeric"
+                  defaultChecked={true}
+                  onChange={e => {
+                    this.updatePagerState("type", e.target.value);
+                  }}
+                />
+                <label
+                  style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
+                  className="k-radio-label"
+                  htmlFor="numeric"
+                >
+                  Numeric&nbsp;
+                </label>
+                <input
+                  type="radio"
+                  name="pager"
+                  id="input"
+                  className="k-radio"
+                  value="input"
+                  onChange={e => {
+                    this.updatePagerState("type", e.target.value);
+                  }}
+                />
+                <label
+                  style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
+                  className="k-radio-label"
+                  htmlFor="input"
+                >
+                  Input&nbsp;
+                </label>
+              </dd>
+            </dl>
+            <dl>
+              <dt>Max. number of buttons:</dt>
+              <dd>
+                <input
+                  defaultValue="5"
+                  className="k-textbox"
+                  type="number"
+                  onChange={e => {
+                    this.updatePagerState(
+                      "buttonCount",
+                      e.target.valueAsNumber
+                    );
+                  }}
+                />
+              </dd>
+            </dl>
+          </div>
+          <div className="col-md-6 row">
+            <div className="col-md-12">
+              <input
+                className="k-checkbox"
+                defaultChecked={true}
+                id="showInfo"
+                type="checkbox"
+                onChange={e => {
+                  this.updatePagerState("info", e.target.checked);
+                }}
+              />
+              <label htmlFor="showInfo" className="k-checkbox-label">
+                Show info
+              </label>
+            </div>
+            <div className="col-md-12">
+              <input
+                className="k-checkbox"
+                defaultChecked={true}
+                id="pageSize"
+                type="checkbox"
+                onChange={e => {
+                  this.updatePagerState("pageSizes", e.target.checked);
+                }}
+              />
+              <label htmlFor="pageSize" className="k-checkbox-label">
+                Show page sizes
+              </label>
+            </div>
+            <div className="col-md-12">
+              <input
+                className="k-checkbox"
+                defaultChecked={true}
+                type="checkbox"
+                id="previousNext"
+                onChange={e => {
+                  this.updatePagerState("previousNext", e.target.checked);
+                }}
+              />
+              <label htmlFor="previousNext" className="k-checkbox-label">
+                Show previous / next buttons
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
+
+export default Provider;
