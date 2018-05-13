@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import {
   Grid,
   GridColumn,
@@ -19,6 +18,7 @@ class DropDownCell extends GridCell {
       value: e.target.value
     });
   }
+
   render() {
     const value = this.props.dataItem[this.props.field];
 
@@ -56,13 +56,16 @@ let responseProviders = [];
 class Provider extends React.Component {
   constructor(props) {
     super(props);
+
     // set some constants
     this.defaultPageSize = 25;
     this.defaultButtonCount = 5;
+
     // using bind of the javascript to bind this object to class level functions
     this.callbackRead = this.callbackRead.bind(this);
     this.callbackDelete = this.callbackDelete.bind(this);
     this.updateOwnerState = this.updateOwnerState.bind(this);
+
     // emit provider read request via socket.io,
     // set the callback func to process the response
     Socket.emit(
@@ -72,7 +75,8 @@ class Provider extends React.Component {
         limit: this.defaultPageSize,
         search: {
           ownership: 0
-        }
+        },
+        sort: []
       }),
       this.callbackRead
     );
@@ -81,6 +85,9 @@ class Provider extends React.Component {
       skip: 0,
       data: [],
       limit: this.defaultPageSize,
+      sort: [],
+      allowUnsort: true,
+      multiple: false,
       pagerState: {
         info: true,
         type: "numeric",
@@ -89,13 +96,14 @@ class Provider extends React.Component {
         pageSize: this.defaultPageSize,
         buttonCount: this.defaultButtonCount
       },
-      searchState: {
+      filter: {
         ownership: 0
       }
     };
 
     this.enterInsert = this.enterInsert.bind(this);
     this.itemChange = this.itemChange.bind(this);
+    this.sortChange = this.sortChange.bind(this);
 
     const enterEdit = this.enterEdit.bind(this);
     const save = this.save.bind(this);
@@ -107,13 +115,13 @@ class Provider extends React.Component {
         return !this.props.dataItem.inEdit ? (
           <td>
             <button
-              className="k-primary k-button k-grid-edit-command"
+              className="k-primary k-button k-grid-edit-command btn-xs"
               onClick={() => enterEdit(this.props.dataItem)}
             >
               Edit
             </button>
             <button
-              className="k-button k-grid-remove-command"
+              className="k-button k-grid-remove-command btn-xs"
               onClick={() =>
                 window.confirm(
                   "Confirm deleting: " + this.props.dataItem.name
@@ -126,13 +134,13 @@ class Provider extends React.Component {
         ) : (
           <td>
             <button
-              className="k-button k-grid-save-command"
+              className="k-button k-grid-save-command btn-sm"
               onClick={() => save(this.props.dataItem)}
             >
               {this.props.dataItem.id ? "Update" : "Add"}
             </button>
             <button
-              className="k-button k-grid-cancel-command"
+              className="k-button k-grid-cancel-command btn-sm"
               onClick={() => cancel(this.props.dataItem)}
             >
               {this.props.dataItem.id ? "Cancel" : "Discard"}
@@ -167,6 +175,7 @@ class Provider extends React.Component {
       data: response.providers.slice(0),
       total: response.total,
       skip: response.skip,
+      fields: Object.getOwnPropertyNames(response.providers[0]).slice(0, 10),
       pageSize: response.providers.length,
       pagerState: Object.assign({}, this.state.pagerState, {
         pageSize: response.providers.length
@@ -179,7 +188,7 @@ class Provider extends React.Component {
 
     console.log("[Provider.callbackSave] objectResponse:", response);
 
-    if (response.code != 200) {
+    if (response.code !== 200) {
     }
   }
 
@@ -221,7 +230,7 @@ class Provider extends React.Component {
   }
 
   save(dataItem) {
-    console.log("[Provider.save] dataItem:", dataItem);
+    console.log("[Provider.save] before calling update. dataItem:", dataItem);
 
     dataItem.inEdit = undefined;
     dataItem.id = this.update(responseProviders, dataItem).id;
@@ -229,9 +238,9 @@ class Provider extends React.Component {
     this.setState({
       data: this.state.data.slice()
     });
-    // SocketIOClient.emit('provider:delete', JSON.stringify({ id: dataItem.id }),
-    //   this.funcSaveCallback.b
-    // );
+    console.log("[Provider.save] after calling update. dataItem:", dataItem);
+
+    Socket.emit("provider:save", JSON.stringify(dataItem), this.callbackSave);
   }
 
   cancel(dataItem) {
@@ -287,6 +296,32 @@ class Provider extends React.Component {
     });
   }
 
+  sortChange(event) {
+    console.log("[Provider.sortChange] event.sort:", event.sort);
+
+    this.setState({
+      sort: event.sort
+    });
+
+    console.log(
+      "[Provider.sortChange] this.state.limit:",
+      this.state.limit,
+      "this.state.skip:",
+      this.state.skip
+    );
+
+    Socket.emit(
+      "provider:read",
+      JSON.stringify({
+        skip: this.state.skip,
+        limit: this.state.limit,
+        search: this.state.filter,
+        sort: this.state.sort
+      }),
+      this.callbackRead
+    );
+  }
+
   update(data, item, remove) {
     console.log("[Provider.update] item:", item, "remove:", remove);
 
@@ -314,14 +349,25 @@ class Provider extends React.Component {
   }
 
   onPageChange(e) {
-    console.log("[Provider.eventOnPageChange] this:", this, "e:", e);
+    console.log(
+      "[Provider.eventOnPageChange] e.page.skip:",
+      e.page.skip,
+      "e.page.limit:",
+      e.page.limit
+    );
+
+    this.setState({
+      skip: e.page.skip,
+      limit: e.page.take
+    });
 
     Socket.emit(
       "provider:read",
       JSON.stringify({
         skip: e.page.skip,
         limit: e.page.take,
-        search: this.state.searchState
+        search: this.state.filter,
+        sort: this.state.sort
       }),
       this.callbackRead
     );
@@ -349,12 +395,16 @@ class Provider extends React.Component {
       value
     );
 
-    this.state.searchState.ownership = parseInt(value);
+    this.setState({
+      filter: Object.assign(this.state.filter, {
+        ownership: parseInt(value, 10)
+      })
+    });
 
     console.log(
       "[Provider.funcUpdateOwnershipState] after update",
       "this.state.objectSearchState:",
-      this.state.searchState
+      this.state.filter
     );
 
     Socket.emit(
@@ -362,7 +412,8 @@ class Provider extends React.Component {
       JSON.stringify({
         skip: 0,
         limit: this.defaultPageSize,
-        search: this.state.searchState
+        search: this.state.filter,
+        sort: this.state.sort
       }),
       this.callbackRead
     );
@@ -429,6 +480,48 @@ class Provider extends React.Component {
               </label>
             </dd>
           </dl>
+          <dl>
+            <dt>Filter state:</dt>
+            <dd>
+              <input
+                type="checkbox"
+                className="k-checkbox"
+                id="unsort"
+                checked={this.state.allowUnsort}
+                onChange={e =>
+                  this.setState({
+                    allowUnsort: e.target.checked
+                  })
+                }
+              />
+              <label
+                htmlFor="unsort"
+                className="k-checkbox-label"
+                style={{ lineHeight: "1.2", marginBottom: "1em" }}
+              >
+                Enable unsorting
+              </label>
+              <br />
+              <input
+                type="checkbox"
+                className="k-checkbox"
+                id="multiSort"
+                checked={this.state.multiple}
+                onChange={e =>
+                  this.setState({
+                    multiple: e.target.checked
+                  })
+                }
+              />
+              <label
+                htmlFor="multiSort"
+                className="k-checkbox-label"
+                style={{ lineHeight: "1.2" }}
+              >
+                Enable multiple columns sorting
+              </label>
+            </dd>
+          </dl>
         </div>
         <Grid
           data={this.state.data}
@@ -440,6 +533,12 @@ class Provider extends React.Component {
           itemChange={this.itemChange}
           style={{ maxHeight: "980px" }}
           editField="inEdit"
+          sortable={{
+            allowUnsort: this.state.allowUnsort,
+            mode: this.state.multiple ? "multiple" : "single"
+          }}
+          sort={this.state.sort}
+          sortChange={this.sortChange}
         >
           <GridToolbar>
             <button
@@ -461,16 +560,27 @@ class Provider extends React.Component {
               </button>
             )}
           </GridToolbar>
-          <GridColumn field="id" title="Id" editable={false} />
+          <GridColumn field="id" title="Id" editable={false} width="100px" />
           <GridColumn field="name" title="Name" />
           <GridColumn
             field="isConfirmed"
             title="IsConfirmed"
             editor="boolean"
+            width="120px"
           />
-          <GridColumn field="categories" title="Categories" />
-          <GridColumn field="latitude" title="Latitude" editor="numeric" />
-          <GridColumn field="longitude" title="Longitude" editor="numeric" />
+          <GridColumn field="categories" title="Categories" editable={false} />
+          <GridColumn
+            field="latitude"
+            title="Latitude"
+            editor="numeric"
+            width="120px"
+          />
+          <GridColumn
+            field="longitude"
+            title="Longitude"
+            editor="numeric"
+            width="120px"
+          />
 
           {/* <GridColumn field="ProductID" title="Id" width="50px" editable={false} />
           <GridColumn field="ProductName" title="Product Name" />
@@ -478,7 +588,7 @@ class Provider extends React.Component {
             editor="date" format="{0:d}" />
           <GridColumn field="UnitsInStock" title="Units" editor="numeric" />
           <GridColumn field="Discontinued" cell={DropDownCell} /> */}
-          <GridColumn cell={this.CommandCell} width="220px" />
+          <GridColumn cell={this.CommandCell} width="235px" />
         </Grid>
         <div className="example-config row">
           <div className="col-md-6">
