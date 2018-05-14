@@ -32,14 +32,14 @@ class Login extends Component {
     this.onChangePassword = this.onChangePassword.bind(this);
     this.callbackLogin = this.callbackLogin.bind(this);
 
-    Socket.emit(
-      "user:auth",
-      JSON.stringify({
-        username: "09039944234",
-        password: "123123"
-      }),
-      this.callbackLogin
-    );
+    // Socket.emit(
+    //   "user:auth",
+    //   JSON.stringify({
+    //     username: "09039944234",
+    //     password: "123123"
+    //   }),
+    //   this.callbackLogin
+    // );
   }
 
   submitForm(event) {

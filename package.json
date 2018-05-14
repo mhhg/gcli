@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "The Reglazh project administration panel via socket.io, react, kendo, ... ",
   "author": "Mohammad Haghighat",
-  "homepage": "https://reglazh.com",
+  "homepage": ".",
   "copyright": "Copyright 2018 Gentle Thinkers Company",
   "license": "GPL-v2",
   "private": true,

@@ -7,6 +7,18 @@ import {
 } from "@progress/kendo-react-grid";
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import Socket from "../../socket";
+import {
+  Badge,
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+  Col,
+  Row,
+  Collapse,
+  Fade
+} from "reactstrap";
+
 // import { sampleProducts } from './sample-products.jsx';
 
 class DropDownCell extends GridCell {
@@ -60,13 +72,19 @@ class Provider extends React.Component {
     // set some constants
     this.defaultPageSize = 25;
     this.defaultButtonCount = 5;
+    // set initial filter state
+    const initialFilter = {
+      logic: "and",
+      filters: []
+    };
 
-    // using bind of the javascript to bind this object to class level functions
+    // bind state to callback events which will be
+    // triggered when the server response fetched
     this.callbackRead = this.callbackRead.bind(this);
     this.callbackDelete = this.callbackDelete.bind(this);
     this.updateOwnerState = this.updateOwnerState.bind(this);
 
-    // emit provider read request via socket.io,
+    // emit provider read request via socket.io, and
     // set the callback func to process the response
     Socket.emit(
       "provider:read",
@@ -76,12 +94,17 @@ class Provider extends React.Component {
         search: {
           ownership: 0
         },
+        filter: initialFilter,
         sort: []
       }),
       this.callbackRead
     );
 
+    // setup state
     this.state = {
+      collapse: false,
+      fadeIn: true,
+      timeout: 300,
       skip: 0,
       data: [],
       limit: this.defaultPageSize,
@@ -96,20 +119,28 @@ class Provider extends React.Component {
         pageSize: this.defaultPageSize,
         buttonCount: this.defaultButtonCount
       },
-      filter: {
+      filter: initialFilter,
+      search: {
         ownership: 0
       }
     };
 
+    // bind events to state
     this.enterInsert = this.enterInsert.bind(this);
     this.itemChange = this.itemChange.bind(this);
     this.sortChange = this.sortChange.bind(this);
+    this.filterChange = this.filterChange.bind(this);
+    // UI related only
+    this.toggle = this.toggle.bind(this);
+    this.toggleFade = this.toggleFade.bind(this);
 
+    // bind commands to state
     const enterEdit = this.enterEdit.bind(this);
     const save = this.save.bind(this);
     const cancel = this.cancel.bind(this);
     const remove = this.remove.bind(this);
 
+    // define command cell class to handle commands
     class MyCommandCell extends GridCell {
       render() {
         return !this.props.dataItem.inEdit ? (
@@ -149,7 +180,6 @@ class Provider extends React.Component {
         );
       }
     }
-
     this.CommandCell = MyCommandCell;
   }
 
@@ -168,6 +198,11 @@ class Provider extends React.Component {
       return;
     }
 
+    let fields = [];
+    if (response.providers.length > 0) {
+      fields = Object.getOwnPropertyNames(response.providers[0]).slice(0, 10);
+    }
+
     // set the responseProvider variable as a clone of the handler response
     responseProviders = response.providers.slice(0);
 
@@ -175,7 +210,7 @@ class Provider extends React.Component {
       data: response.providers.slice(0),
       total: response.total,
       skip: response.skip,
-      fields: Object.getOwnPropertyNames(response.providers[0]).slice(0, 10),
+      fields: fields,
       pageSize: response.providers.length,
       pagerState: Object.assign({}, this.state.pagerState, {
         pageSize: response.providers.length
@@ -193,12 +228,6 @@ class Provider extends React.Component {
   }
 
   callbackDelete(stringResponse) {
-    // dataItem.inEdit = undefined;
-    // dataItem.deleted = true;
-    // this.update(this.providerArray, dataItem, true);
-    // this.setState({
-    //   arrayProvider: this.state.arrayProvider.slice()
-    // });
     console.log("[Provider.callbackDelete] stringResponse: ", stringResponse);
   }
 
@@ -278,6 +307,32 @@ class Provider extends React.Component {
     );
   }
 
+  update(data, item, remove) {
+    console.log("[Provider.update] item:", item, "remove:", remove);
+
+    let updated;
+    let index = data.findIndex(
+      p => p === item || (item.id && p.id === item.id)
+    );
+
+    if (index >= 0) {
+      updated = Object.assign({}, item);
+      data[index] = updated;
+    } else {
+      let id = 1;
+      // data.forEach(p => { id = Math.max(p.ProductID + 1, id); });
+      updated = Object.assign({}, item, { id: id });
+      data.unshift(updated);
+      index = 0;
+    }
+
+    if (remove) {
+      return data.splice(index, 1)[0];
+    }
+
+    return data[index];
+  }
+
   itemChange(event) {
     console.log("[Provider.itemChange] event:", event);
 
@@ -315,37 +370,37 @@ class Provider extends React.Component {
       JSON.stringify({
         skip: this.state.skip,
         limit: this.state.limit,
-        search: this.state.filter,
+        search: this.state.search,
+        filter: this.state.filter,
         sort: this.state.sort
       }),
       this.callbackRead
     );
   }
 
-  update(data, item, remove) {
-    console.log("[Provider.update] item:", item, "remove:", remove);
+  filterChange(event) {
+    console.log("[Provider.filterChange] event.filter:", event.filter);
 
-    let updated;
-    let index = data.findIndex(
-      p => p === item || (item.id && p.id === item.id)
+    this.setState({
+      filter: event.filter
+    });
+
+    console.log(
+      "[Provider.filterChange] before emit read request, this.state.filter:",
+      this.state.filter
     );
 
-    if (index >= 0) {
-      updated = Object.assign({}, item);
-      data[index] = updated;
-    } else {
-      let id = 1;
-      // data.forEach(p => { id = Math.max(p.ProductID + 1, id); });
-      updated = Object.assign({}, item, { id: id });
-      data.unshift(updated);
-      index = 0;
-    }
-
-    if (remove) {
-      return data.splice(index, 1)[0];
-    }
-
-    return data[index];
+    Socket.emit(
+      "provider:read",
+      JSON.stringify({
+        skip: this.state.skip,
+        limit: this.state.limit,
+        search: this.state.search,
+        filter: this.state.filter,
+        sort: this.state.sort
+      }),
+      this.callbackRead
+    );
   }
 
   onPageChange(e) {
@@ -366,7 +421,8 @@ class Provider extends React.Component {
       JSON.stringify({
         skip: e.page.skip,
         limit: e.page.take,
-        search: this.state.filter,
+        search: this.state.search,
+        filter: this.state.filter,
         sort: this.state.sort
       }),
       this.callbackRead
@@ -396,7 +452,7 @@ class Provider extends React.Component {
     );
 
     this.setState({
-      filter: Object.assign(this.state.filter, {
+      search: Object.assign(this.state.filter, {
         ownership: parseInt(value, 10)
       })
     });
@@ -412,117 +468,308 @@ class Provider extends React.Component {
       JSON.stringify({
         skip: 0,
         limit: this.defaultPageSize,
-        search: this.state.filter,
+        search: this.state.search,
+        filter: this.state.filter,
         sort: this.state.sort
       }),
       this.callbackRead
     );
   }
 
+  toggle() {
+    this.setState({ collapse: !this.state.collapse });
+  }
+
+  toggleFade() {
+    this.setState({ fadeIn: !this.state.fadeIn });
+  }
+
   render() {
     return (
       <div>
-        <div className="col-md-12">
-          <dl>
-            <dt>Ownership status filter:</dt>
-            <dd>
-              <input
-                type="radio"
-                name="ownership"
-                id="ownershipTemplate"
-                className="k-radio"
-                value="1"
-                onChange={e => {
-                  this.updateOwnerState("type", e.target.value);
-                }}
-              />
-              <label
-                style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
-                className="k-radio-label"
-                htmlFor="ownershipTemplate"
-              >
-                Template (from excel file)&nbsp;
-              </label>
-              <input
-                type="radio"
-                name="ownership"
-                id="ownershipRegistered"
-                className="k-radio"
-                value="2"
-                onChange={e => {
-                  this.updateOwnerState("type", e.target.value);
-                }}
-              />
-              <label
-                style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
-                className="k-radio-label"
-                htmlFor="ownershipRegistered"
-              >
-                Registered&nbsp;
-              </label>
-              <input
-                defaultChecked={true}
-                type="radio"
-                name="ownership"
-                id="ownershipAll"
-                className="k-radio"
-                value="0"
-                onChange={e => {
-                  this.updateOwnerState("type", e.target.value);
-                }}
-              />
-              <label
-                style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
-                className="k-radio-label"
-                htmlFor="ownershipAll"
-              >
-                All (no filter)&nbsp;
-              </label>
-            </dd>
-          </dl>
-          <dl>
-            <dt>Filter state:</dt>
-            <dd>
-              <input
-                type="checkbox"
-                className="k-checkbox"
-                id="unsort"
-                checked={this.state.allowUnsort}
-                onChange={e =>
-                  this.setState({
-                    allowUnsort: e.target.checked
-                  })
-                }
-              />
-              <label
-                htmlFor="unsort"
-                className="k-checkbox-label"
-                style={{ lineHeight: "1.2", marginBottom: "1em" }}
-              >
-                Enable unsorting
-              </label>
-              <br />
-              <input
-                type="checkbox"
-                className="k-checkbox"
-                id="multiSort"
-                checked={this.state.multiple}
-                onChange={e =>
-                  this.setState({
-                    multiple: e.target.checked
-                  })
-                }
-              />
-              <label
-                htmlFor="multiSort"
-                className="k-checkbox-label"
-                style={{ lineHeight: "1.2" }}
-              >
-                Enable multiple columns sorting
-              </label>
-            </dd>
-          </dl>
-        </div>
+        <Col
+          xs="12"
+          sm="12"
+          md="12"
+          style={{
+            padding: "0px",
+            marginBottom: "5px"
+          }}
+        >
+          <Fade timeout={this.state.timeout} in={this.state.fadeIn}>
+            <Card
+              className="card-accent-primary"
+              style={{
+                padding: "0px",
+                marginBottom: "5px"
+              }}
+            >
+              <CardHeader>
+                Providers Grid State Form
+                <div className="card-header-actions">
+                  {/* <a href="#" className="card-header-action btn btn-setting"><i className="icon-settings"></i></a> */}
+                  <a
+                    className="card-header-action btn btn-minimize"
+                    data-target="#collapseExample"
+                    onClick={this.toggle}
+                  >
+                    <i className="icon-arrow-up" />
+                  </a>
+                  {/* <a className="card-header-action btn btn-close" onClick={this.toggleFade}><i className="icon-close"></i></a> */}
+                </div>
+              </CardHeader>
+              <Collapse isOpen={this.state.collapse} id="collapseExample">
+                <CardBody>
+                  <div className="example-config row">
+                    <div className="col-md-12 row">
+                      <div className="col-md-3">
+                        <dl>
+                          <dt>Ownership status filter:</dt>
+                          <dd>
+                            <input
+                              type="radio"
+                              name="ownership"
+                              id="ownershipTemplate"
+                              className="k-radio"
+                              value="1"
+                              onChange={e => {
+                                this.updateOwnerState("type", e.target.value);
+                              }}
+                            />
+                            <label
+                              style={{
+                                margin: "7px 3em 7px 0px",
+                                lineHeight: "1.2"
+                              }}
+                              className="k-radio-label"
+                              htmlFor="ownershipTemplate"
+                            >
+                              Template (Excel)&nbsp;
+                            </label>
+                            <input
+                              type="radio"
+                              name="ownership"
+                              id="ownershipRegistered"
+                              className="k-radio"
+                              value="2"
+                              onChange={e => {
+                                this.updateOwnerState("type", e.target.value);
+                              }}
+                            />
+                            <label
+                              style={{
+                                margin: "7px 3em 7px 0px",
+                                lineHeight: "1.2"
+                              }}
+                              className="k-radio-label"
+                              htmlFor="ownershipRegistered"
+                            >
+                              Registered&nbsp;
+                            </label>
+                            <input
+                              defaultChecked={true}
+                              type="radio"
+                              name="ownership"
+                              id="ownershipAll"
+                              className="k-radio"
+                              value="0"
+                              onChange={e => {
+                                this.updateOwnerState("type", e.target.value);
+                              }}
+                            />
+                            <label
+                              style={{
+                                margin: "7px 3em 7px 0px",
+                                lineHeight: "1.2"
+                              }}
+                              className="k-radio-label"
+                              htmlFor="ownershipAll"
+                            >
+                              All&nbsp;
+                            </label>
+                          </dd>
+                        </dl>
+                      </div>
+                      <div className="col-md-2">
+                        <dl>
+                          <dt>Filter state:</dt>
+                          <dd>
+                            <input
+                              type="checkbox"
+                              className="k-checkbox"
+                              id="unsort"
+                              checked={this.state.allowUnsort}
+                              onChange={e =>
+                                this.setState({
+                                  allowUnsort: e.target.checked
+                                })
+                              }
+                            />
+                            <label
+                              htmlFor="unsort"
+                              className="k-checkbox-label"
+                              style={{
+                                lineHeight: "1.2",
+                                marginBottom: "1em"
+                              }}
+                            >
+                              Enable unsorting
+                            </label>
+                            <br />
+                            <input
+                              type="checkbox"
+                              className="k-checkbox"
+                              id="multiSort"
+                              checked={this.state.multiple}
+                              onChange={e =>
+                                this.setState({
+                                  multiple: e.target.checked
+                                })
+                              }
+                            />
+                            <label
+                              htmlFor="multiSort"
+                              className="k-checkbox-label"
+                              style={{ lineHeight: "1.2" }}
+                            >
+                              Enable multiple columns sorting
+                            </label>
+                          </dd>
+                        </dl>
+                        {/* </div> */}
+                      </div>
+                      <div className="col-md-2">
+                        <dl>
+                          <dt>Pager type:</dt>
+                          <dd>
+                            <input
+                              type="radio"
+                              name="pager"
+                              id="numeric"
+                              className="k-radio"
+                              value="numeric"
+                              defaultChecked={true}
+                              onChange={e => {
+                                this.updatePagerState("type", e.target.value);
+                              }}
+                            />
+                            <label
+                              style={{
+                                margin: "7px 3em 7px 0px",
+                                lineHeight: "1.2"
+                              }}
+                              className="k-radio-label"
+                              htmlFor="numeric"
+                            >
+                              Numeric&nbsp;
+                            </label>
+                            <input
+                              type="radio"
+                              name="pager"
+                              id="input"
+                              className="k-radio"
+                              value="input"
+                              onChange={e => {
+                                this.updatePagerState("type", e.target.value);
+                              }}
+                            />
+                            <label
+                              style={{
+                                margin: "7px 3em 7px 0px",
+                                lineHeight: "1.2"
+                              }}
+                              className="k-radio-label"
+                              htmlFor="input"
+                            >
+                              Input&nbsp;
+                            </label>
+                          </dd>
+                        </dl>
+                      </div>
+                      <div className="col-md-2">
+                        <div className="col-md-12">
+                          <input
+                            className="k-checkbox"
+                            defaultChecked={true}
+                            id="showInfo"
+                            type="checkbox"
+                            onChange={e => {
+                              this.updatePagerState("info", e.target.checked);
+                            }}
+                          />
+                          <label
+                            htmlFor="showInfo"
+                            className="k-checkbox-label"
+                          >
+                            Show info
+                          </label>
+                        </div>
+                        <div className="col-md-12">
+                          <input
+                            className="k-checkbox"
+                            defaultChecked={true}
+                            id="pageSize"
+                            type="checkbox"
+                            onChange={e => {
+                              this.updatePagerState(
+                                "pageSizes",
+                                e.target.checked
+                              );
+                            }}
+                          />
+                          <label
+                            htmlFor="pageSize"
+                            className="k-checkbox-label"
+                          >
+                            Show page sizes
+                          </label>
+                        </div>
+                        <div className="col-md-12">
+                          <input
+                            className="k-checkbox"
+                            defaultChecked={true}
+                            type="checkbox"
+                            id="previousNext"
+                            onChange={e => {
+                              this.updatePagerState(
+                                "previousNext",
+                                e.target.checked
+                              );
+                            }}
+                          />
+                          <label
+                            htmlFor="previousNext"
+                            className="k-checkbox-label"
+                          >
+                            Show previous / next buttons
+                          </label>
+                        </div>
+                      </div>
+                      <div className="col-md-3">
+                        <dl>
+                          <dt>Max. number of buttons:</dt>
+                          <dd>
+                            <input
+                              defaultValue="5"
+                              className="k-textbox"
+                              type="number"
+                              onChange={e => {
+                                this.updatePagerState(
+                                  "buttonCount",
+                                  e.target.valueAsNumber
+                                );
+                              }}
+                            />
+                          </dd>
+                        </dl>
+                      </div>
+                    </div>
+                  </div>
+                </CardBody>
+              </Collapse>
+            </Card>
+          </Fade>
+        </Col>
         <Grid
           data={this.state.data}
           pageChange={this.onPageChange.bind(this)}
@@ -531,7 +778,10 @@ class Provider extends React.Component {
           pageable={this.state.pagerState}
           pageSize={this.state.pageSize}
           itemChange={this.itemChange}
-          style={{ maxHeight: "980px" }}
+          filterable={true}
+          filter={this.state.filter}
+          filterChange={this.filterChange}
+          style={{ maxHeight: "750px" }}
           editField="inEdit"
           sortable={{
             allowUnsort: this.state.allowUnsort,
@@ -560,26 +810,52 @@ class Provider extends React.Component {
               </button>
             )}
           </GridToolbar>
-          <GridColumn field="id" title="Id" editable={false} width="100px" />
-          <GridColumn field="name" title="Name" />
+          <GridColumn field="id" title="ID" editable={false} width="150px" />
+          <GridColumn field="name" title="Name" width="230px" />
           <GridColumn
             field="isConfirmed"
             title="IsConfirmed"
             editor="boolean"
-            width="120px"
+            filter="boolean"
+            width="150px"
           />
-          <GridColumn field="categories" title="Categories" editable={false} />
+          <GridColumn
+            field="categories"
+            title="Categories"
+            editable={false}
+            sortable={false}
+            // filterable={false}
+            width="200px"
+          />
+          <GridColumn
+            field="description"
+            title="Description"
+            editable={false}
+            width="200px"
+          />
+          <GridColumn
+            field="background"
+            title="Background"
+            editable={false}
+            sortable={false}
+            // filterable={false}
+            width="200px"
+          />
           <GridColumn
             field="latitude"
             title="Latitude"
+            sortable={false}
             editor="numeric"
-            width="120px"
+            filter="numeric"
+            width="160px"
           />
           <GridColumn
             field="longitude"
             title="Longitude"
+            sortable={false}
             editor="numeric"
-            width="120px"
+            filter="numeric"
+            width="160px"
           />
 
           {/* <GridColumn field="ProductID" title="Id" width="50px" editable={false} />
@@ -588,112 +864,13 @@ class Provider extends React.Component {
             editor="date" format="{0:d}" />
           <GridColumn field="UnitsInStock" title="Units" editor="numeric" />
           <GridColumn field="Discontinued" cell={DropDownCell} /> */}
-          <GridColumn cell={this.CommandCell} width="235px" />
+          <GridColumn
+            cell={this.CommandCell}
+            width="235px"
+            sortable={false}
+            filterable={false}
+          />
         </Grid>
-        <div className="example-config row">
-          <div className="col-md-6">
-            <dl>
-              <dt>Pager type:</dt>
-              <dd>
-                <input
-                  type="radio"
-                  name="pager"
-                  id="numeric"
-                  className="k-radio"
-                  value="numeric"
-                  defaultChecked={true}
-                  onChange={e => {
-                    this.updatePagerState("type", e.target.value);
-                  }}
-                />
-                <label
-                  style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
-                  className="k-radio-label"
-                  htmlFor="numeric"
-                >
-                  Numeric&nbsp;
-                </label>
-                <input
-                  type="radio"
-                  name="pager"
-                  id="input"
-                  className="k-radio"
-                  value="input"
-                  onChange={e => {
-                    this.updatePagerState("type", e.target.value);
-                  }}
-                />
-                <label
-                  style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
-                  className="k-radio-label"
-                  htmlFor="input"
-                >
-                  Input&nbsp;
-                </label>
-              </dd>
-            </dl>
-            <dl>
-              <dt>Max. number of buttons:</dt>
-              <dd>
-                <input
-                  defaultValue="5"
-                  className="k-textbox"
-                  type="number"
-                  onChange={e => {
-                    this.updatePagerState(
-                      "buttonCount",
-                      e.target.valueAsNumber
-                    );
-                  }}
-                />
-              </dd>
-            </dl>
-          </div>
-          <div className="col-md-6 row">
-            <div className="col-md-12">
-              <input
-                className="k-checkbox"
-                defaultChecked={true}
-                id="showInfo"
-                type="checkbox"
-                onChange={e => {
-                  this.updatePagerState("info", e.target.checked);
-                }}
-              />
-              <label htmlFor="showInfo" className="k-checkbox-label">
-                Show info
-              </label>
-            </div>
-            <div className="col-md-12">
-              <input
-                className="k-checkbox"
-                defaultChecked={true}
-                id="pageSize"
-                type="checkbox"
-                onChange={e => {
-                  this.updatePagerState("pageSizes", e.target.checked);
-                }}
-              />
-              <label htmlFor="pageSize" className="k-checkbox-label">
-                Show page sizes
-              </label>
-            </div>
-            <div className="col-md-12">
-              <input
-                className="k-checkbox"
-                defaultChecked={true}
-                type="checkbox"
-                id="previousNext"
-                onChange={e => {
-                  this.updatePagerState("previousNext", e.target.checked);
-                }}
-              />
-              <label htmlFor="previousNext" className="k-checkbox-label">
-                Show previous / next buttons
-              </label>
-            </div>
-          </div>
-        </div>
       </div>
     );
   }

@@ -17,7 +17,7 @@ import {
   AppSidebarToggler
 } from "@coreui/react";
 import logo from "../../assets/img/brand/logo.svg";
-import golang from "../../assets/img/brand/golang-icon.svg";
+import golang from "../../assets/img/brand/logo-minimal.svg";
 
 const propTypes = {
   children: PropTypes.node
@@ -34,7 +34,7 @@ class DefaultHeader extends Component {
       <React.Fragment>
         <AppSidebarToggler className="d-lg-none" display="md" mobile />
         <AppNavbarBrand
-          full={{ src: logo, width: 89, height: 25, alt: "Reglazh Logo" }}
+          full={{ src: logo, width: 154, height: 27, alt: "Reglazh Logo" }}
           minimized={{ src: golang, width: 30, height: 30, alt: "Reglazh Logo" }}
         />
         <AppSidebarToggler className="d-md-down-none" display="lg" />
