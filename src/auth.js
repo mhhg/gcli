@@ -1,6 +1,6 @@
 
 
-localStorage.removeItem('currentUser');
+// localStorage.removeItem('currentUser');
 
 function FuncIsLoggedIn() {
   let state = localStorage.getItem('currentUser');

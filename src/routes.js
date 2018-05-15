@@ -12,6 +12,11 @@ const Login = Loadable({
   loading: Loading,
 });
 
+const Users = Loadable({
+  loader: () => import('./views/Users/User'),
+  loading: Loading,
+});
+
 const Providers = Loadable({
   loader: () => import('./views/Providers/Provider'),
   loading: Loading,
@@ -20,8 +25,9 @@ const Providers = Loadable({
 
 const routes = [
   { path: '/', exact: true, name: 'Home', component: DefaultLayout },
-  { path: '/provider', name: 'Provider', component: Providers },
   { path: '/login', exact: true, name: 'Login', component: Login },
+  { path: '/user', name: 'User', component: Users },
+  { path: '/provider', name: 'Provider', component: Providers },
 ];
 
 export default routes;
