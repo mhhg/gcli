@@ -87,13 +87,11 @@ class User extends React.Component {
     // emit provider read request via socket.io, and
     // set the callback func to process the response
     Socket.emit(
-      "provider:read",
+      "user:read",
       JSON.stringify({
         skip: 0,
         limit: this.defaultPageSize,
-        search: {
-          ownership: 0
-        },
+        search: {},
         filter: initialFilter,
         sort: []
       }),
@@ -188,8 +186,8 @@ class User extends React.Component {
     const response = JSON.parse(stringResponse);
 
     console.log(
-      "[Provider.funcResponseCallback] response.providers.length:",
-      response.providers.length
+      "[User.funcResponseCallback] response.users.length:",
+      response.users.length
     );
 
     if (response === null) {
@@ -199,36 +197,36 @@ class User extends React.Component {
     }
 
     let fields = [];
-    if (response.providers.length > 0) {
-      fields = Object.getOwnPropertyNames(response.providers[0]).slice(0, 10);
+    if (response.users.length > 0) {
+      fields = Object.getOwnPropertyNames(response.users[0]).slice(0, 10);
     }
 
     // set the responseProvider variable as a clone of the handler response
-    responseProviders = response.providers.slice(0);
+    responseProviders = response.users.slice(0);
 
     this.setState({
-      data: response.providers.slice(0),
+      data: response.users.slice(0),
       total: response.total,
       skip: response.skip,
       fields: fields,
-      pageSize: response.providers.length,
-      pagerState: Object.assign({}, this.state.pagerState, {
-        pageSize: response.providers.length
-      })
+      // pageSize: response.users.length,
+      // pagerState: Object.assign({}, this.state.pagerState, {
+      //   pageSize: response.users.length
+      // })
     });
   }
 
   callbackSave(stringResponse) {
     let response = JSON.parse(stringResponse);
 
-    console.log("[Provider.callbackSave] objectResponse:", response);
+    console.log("[User.callbackSave] objectResponse:", response);
 
     if (response.code !== 200) {
     }
   }
 
   callbackDelete(stringResponse) {
-    console.log("[Provider.callbackDelete] stringResponse: ", stringResponse);
+    console.log("[User.callbackDelete] stringResponse: ", stringResponse);
   }
 
   enterInsert() {
@@ -237,20 +235,20 @@ class User extends React.Component {
       Discontinued: false
     };
 
-    console.log("[Provider.enterInsert] dataItem:", dataItem);
+    console.log("[User.enterInsert] dataItem:", dataItem);
 
-    const newProviders = this.state.data.slice();
-    newProviders.unshift(dataItem);
+    const newUsers = this.state.data.slice();
+    newUsers.unshift(dataItem);
 
-    this.update(newProviders, dataItem);
+    this.update(newUsers, dataItem);
 
     this.setState({
-      data: newProviders
+      data: newUsers
     });
   }
 
   enterEdit(dataItem) {
-    console.log("[Provider.enterEdit] dataItem:", dataItem);
+    console.log("[User.enterEdit] dataItem:", dataItem);
 
     this.update(this.state.data, dataItem).inEdit = true;
     this.setState({
@@ -259,7 +257,7 @@ class User extends React.Component {
   }
 
   save(dataItem) {
-    console.log("[Provider.save] before calling update. dataItem:", dataItem);
+    console.log("[User.save] before calling update. dataItem:", dataItem);
 
     dataItem.inEdit = undefined;
     dataItem.id = this.update(responseProviders, dataItem).id;
@@ -267,13 +265,13 @@ class User extends React.Component {
     this.setState({
       data: this.state.data.slice()
     });
-    console.log("[Provider.save] after calling update. dataItem:", dataItem);
+    console.log("[User.save] after calling update. dataItem:", dataItem);
 
-    Socket.emit("provider:save", JSON.stringify(dataItem), this.callbackSave);
+    Socket.emit("user:save", JSON.stringify(dataItem), this.callbackSave);
   }
 
   cancel(dataItem) {
-    console.log("[Provider.cancel] dataItem:", dataItem);
+    console.log("[User.cancel] dataItem:", dataItem);
 
     if (dataItem.id) {
       let originalItem = responseProviders.find(p => p.id === dataItem.id);
@@ -287,7 +285,7 @@ class User extends React.Component {
   }
 
   remove(dataItem) {
-    console.log("[Provider.remove] dataItem:", dataItem);
+    console.log("[User.remove] dataItem:", dataItem);
 
     dataItem.inEdit = undefined;
 
@@ -299,7 +297,7 @@ class User extends React.Component {
     });
 
     Socket.emit(
-      "provider:delete",
+      "user:delete",
       JSON.stringify({
         id: dataItem.id
       }),
@@ -308,7 +306,7 @@ class User extends React.Component {
   }
 
   update(data, item, remove) {
-    console.log("[Provider.update] item:", item, "remove:", remove);
+    console.log("[User.update] item:", item, "remove:", remove);
 
     let updated;
     let index = data.findIndex(
@@ -334,7 +332,7 @@ class User extends React.Component {
   }
 
   itemChange(event) {
-    console.log("[Provider.itemChange] event:", event);
+    console.log("[User.itemChange] event:", event);
 
     const value = event.value;
     const name = event.field;
@@ -352,21 +350,21 @@ class User extends React.Component {
   }
 
   sortChange(event) {
-    console.log("[Provider.sortChange] event.sort:", event.sort);
+    console.log("[User.sortChange] event.sort:", event.sort);
 
     this.setState({
       sort: event.sort
     });
 
     console.log(
-      "[Provider.sortChange] this.state.limit:",
+      "[User.sortChange] this.state.limit:",
       this.state.limit,
       "this.state.skip:",
       this.state.skip
     );
 
     Socket.emit(
-      "provider:read",
+      "user:read",
       JSON.stringify({
         skip: this.state.skip,
         limit: this.state.limit,
@@ -379,19 +377,19 @@ class User extends React.Component {
   }
 
   filterChange(event) {
-    console.log("[Provider.filterChange] event.filter:", event.filter);
+    console.log("[User.filterChange] event.filter:", event.filter);
 
     this.setState({
       filter: event.filter
     });
 
     console.log(
-      "[Provider.filterChange] before emit read request, this.state.filter:",
+      "[User.filterChange] before emit read request, this.state.filter:",
       this.state.filter
     );
 
     Socket.emit(
-      "provider:read",
+      "user:read",
       JSON.stringify({
         skip: this.state.skip,
         limit: this.state.limit,
@@ -405,7 +403,7 @@ class User extends React.Component {
 
   onPageChange(e) {
     console.log(
-      "[Provider.eventOnPageChange] e.page.skip:",
+      "[User.eventOnPageChange] e.page.skip:",
       e.page.skip,
       "e.page.limit:",
       e.page.limit
@@ -417,7 +415,7 @@ class User extends React.Component {
     });
 
     Socket.emit(
-      "provider:read",
+      "user:read",
       JSON.stringify({
         skip: e.page.skip,
         limit: e.page.take,
@@ -430,7 +428,7 @@ class User extends React.Component {
   }
 
   updatePagerState(key, value) {
-    console.log("[Provider.funcUpdatePagerState] key:", key, "value:", value);
+    console.log("[User.funcUpdatePagerState] key:", key, "value:", value);
 
     const newPagerState = Object.assign({}, this.state.pagerState, {
       [key]: value
@@ -445,7 +443,7 @@ class User extends React.Component {
 
   updateOwnerState(key, value) {
     console.log(
-      "[Provider.funcUpdateOwnershipState] key:",
+      "[User.funcUpdateOwnershipState] key:",
       key,
       "value:",
       value
@@ -458,13 +456,13 @@ class User extends React.Component {
     });
 
     console.log(
-      "[Provider.funcUpdateOwnershipState] after update",
+      "[User.funcUpdateOwnershipState] after update",
       "this.state.objectSearchState:",
       this.state.filter
     );
 
     Socket.emit(
-      "provider:read",
+      "user:read",
       JSON.stringify({
         skip: 0,
         limit: this.defaultPageSize,
@@ -505,7 +503,7 @@ class User extends React.Component {
               }}
             >
               <CardHeader>
-                Providers Grid State Form
+                Users Grid State Form
                 <div className="card-header-actions">
                   {/* <a href="#" className="card-header-action btn btn-setting"><i className="icon-settings"></i></a> */}
                   <a
@@ -522,7 +520,7 @@ class User extends React.Component {
                 <CardBody>
                   <div className="example-config row">
                     <div className="col-md-12 row">
-                      <div className="col-md-3">
+                      {/* <div className="col-md-3">
                         <dl>
                           <dt>Ownership status filter:</dt>
                           <dd>
@@ -589,7 +587,7 @@ class User extends React.Component {
                             </label>
                           </dd>
                         </dl>
-                      </div>
+                      </div> */}
                       <div className="col-md-2">
                         <dl>
                           <dt>Filter state:</dt>
@@ -811,53 +809,16 @@ class User extends React.Component {
             )}
           </GridToolbar>
           <GridColumn field="id" title="ID" editable={false} width="150px" />
-          <GridColumn field="name" title="Name" width="230px" />
-          <GridColumn
-            field="isConfirmed"
-            title="IsConfirmed"
-            editor="boolean"
-            filter="boolean"
-            width="150px"
-          />
-          <GridColumn
-            field="categories"
-            title="Categories"
-            editable={false}
-            sortable={false}
-            // filterable={false}
-            width="200px"
-          />
-          <GridColumn
-            field="description"
-            title="Description"
-            editable={false}
-            width="200px"
-          />
-          <GridColumn
-            field="background"
-            title="Background"
-            editable={false}
-            sortable={false}
-            // filterable={false}
-            width="200px"
-          />
-          <GridColumn
-            field="latitude"
-            title="Latitude"
-            sortable={false}
-            editor="numeric"
-            filter="numeric"
-            width="160px"
-          />
-          <GridColumn
-            field="longitude"
-            title="Longitude"
-            sortable={false}
-            editor="numeric"
-            filter="numeric"
-            width="160px"
-          />
-
+          <GridColumn field="firstname" title="FirstName" width="200px" />
+          <GridColumn field="lastname" title="LastName" width="200px" />
+          <GridColumn field="username" title="Username" width="200px" />
+          <GridColumn field="confirmed" title="Confirmed" width="200px" />
+          <GridColumn field="isAdmin" title="IsAdmin" width="200px" />
+          <GridColumn field="gender" title="Gender" width="200px" />
+          <GridColumn field="nationalId" title="NationalID" width="200px" />
+          <GridColumn field="middlename" title="Middlename" width="200px" />
+          <GridColumn field="email" title="Email" width="200px" />
+          <GridColumn field="address" title="Address" width="200px" />
           {/* <GridColumn field="ProductID" title="Id" width="50px" editable={false} />
           <GridColumn field="ProductName" title="Product Name" />
           <GridColumn field="FirstOrderedOn" title="First Ordered" 

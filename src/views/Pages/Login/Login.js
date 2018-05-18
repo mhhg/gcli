@@ -75,7 +75,7 @@ class Login extends Component {
       return;
     }
 
-    localStorage.setItem("currentUser", stringResponse);
+    localStorage.setItem("superuser", stringResponse);
 
     this.setState({
       isLoggedIn: true,

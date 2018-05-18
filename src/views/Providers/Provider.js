@@ -211,10 +211,10 @@ class Provider extends React.Component {
       total: response.total,
       skip: response.skip,
       fields: fields,
-      pageSize: response.providers.length,
-      pagerState: Object.assign({}, this.state.pagerState, {
-        pageSize: response.providers.length
-      })
+      // pageSize: response.providers.length,
+      // pagerState: Object.assign({}, this.state.pagerState, {
+      //   pageSize: response.providers.length
+      // })
     });
   }
 
@@ -452,7 +452,7 @@ class Provider extends React.Component {
     );
 
     this.setState({
-      search: Object.assign(this.state.filter, {
+      search: Object.assign(this.state.search, {
         ownership: parseInt(value, 10)
       })
     });
