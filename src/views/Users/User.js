@@ -22,6 +22,10 @@ import {
 // import { sampleProducts } from './sample-products.jsx';
 
 class DropDownCell extends GridCell {
+  constructor(props) {
+    super(props);
+  }
+
   handleChange(e) {
     this.props.onChange({
       dataItem: this.props.dataItem,
@@ -32,34 +36,38 @@ class DropDownCell extends GridCell {
   }
 
   render() {
-    const value = this.props.dataItem[this.props.field];
-
-    if (!this.props.dataItem.inEdit) {
-      return (
-        <td>
-          {value === null
-            ? ""
-            : this.props.dataItem[this.props.field].toString()}
-        </td>
-      );
-    }
-
     return (
-      <td>
-        <DropDownList
-          style={{ width: "100px" }}
-          onChange={this.handleChange.bind(this)}
-          value={value}
-          data={[
-            { text: "yes", value: true },
-            { text: "no", value: false },
-            { text: "(empty)", value: null }
-          ]}
-          valueField="value"
-          textField="text"
-        />
-      </td>
+      <img src="http://repo.reglazh.com/assets/images/markers/cat-%D9%85%DA%A9%D8%A7%D9%86%DB%8C%DA%A9%DB%8C.svg" />
     );
+
+    // const value = this.props.dataItem[this.props.field];
+
+    // if (!this.props.dataItem.inEdit) {
+    //   return (
+    //     <td>
+    //       {value === null
+    //         ? ""
+    //         : this.props.dataItem[this.props.field].toString()}
+    //     </td>
+    //   );
+    // }
+
+    // return (
+    //   <td>
+    //     <DropDownList
+    //       style={{ width: "100px" }}
+    //       onChange={this.handleChange.bind(this)}
+    //       value={value}
+    //       data={[
+    //         { text: "yes", value: true },
+    //         { text: "no", value: false },
+    //         { text: "(empty)", value: null }
+    //       ]}
+    //       valueField="value"
+    //       textField="text"
+    //     />
+    //   </td>
+    // );
   }
 }
 
@@ -208,7 +216,7 @@ class User extends React.Component {
       data: response.users.slice(0),
       total: response.total,
       skip: response.skip,
-      fields: fields,
+      fields: fields
       // pageSize: response.users.length,
       // pagerState: Object.assign({}, this.state.pagerState, {
       //   pageSize: response.users.length
@@ -442,12 +450,7 @@ class User extends React.Component {
   }
 
   updateOwnerState(key, value) {
-    console.log(
-      "[User.funcUpdateOwnershipState] key:",
-      key,
-      "value:",
-      value
-    );
+    console.log("[User.funcUpdateOwnershipState] key:", key, "value:", value);
 
     this.setState({
       search: Object.assign(this.state.filter, {
@@ -809,6 +812,14 @@ class User extends React.Component {
             )}
           </GridToolbar>
           <GridColumn field="id" title="ID" editable={false} width="150px" />
+          <GridColumn
+            field="imageId"
+            title="Image"
+            editable={false}
+            width="150px"
+            cell={'<img src="http://repo.reglazh.com/assets/images/markers/cat-%D9%85%DA%A9%D8%A7%D9%86%DB%8C%DA%A9%DB%8C.svg" alt="image" />'}
+            // cell={DropDownCell}
+          />
           <GridColumn field="firstname" title="FirstName" width="200px" />
           <GridColumn field="lastname" title="LastName" width="200px" />
           <GridColumn field="username" title="Username" width="200px" />

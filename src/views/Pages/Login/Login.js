@@ -32,6 +32,13 @@ class Login extends Component {
     this.onChangePassword = this.onChangePassword.bind(this);
     this.callbackLogin = this.callbackLogin.bind(this);
 
+    let tokenState = localStorage.getItem("superuser");
+    if (tokenState !=== null) {
+      let user = JSON.parse(tokenState);
+      if (user.token !== "") {
+        
+      }
+    }
     // Socket.emit(
     //   "user:auth",
     //   JSON.stringify({
