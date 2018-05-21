@@ -210,7 +210,7 @@ class Provider extends React.Component {
       data: response.providers.slice(0),
       total: response.total,
       skip: response.skip,
-      fields: fields,
+      fields: fields
       // pageSize: response.providers.length,
       // pagerState: Object.assign({}, this.state.pagerState, {
       //   pageSize: response.providers.length

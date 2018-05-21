@@ -817,18 +817,42 @@ class User extends React.Component {
             title="Image"
             editable={false}
             width="150px"
-            cell={'<img src="http://repo.reglazh.com/assets/images/markers/cat-%D9%85%DA%A9%D8%A7%D9%86%DB%8C%DA%A9%DB%8C.svg" alt="image" />'}
+            cell={
+              '<img src="http://repo.reglazh.com/assets/images/markers/cat-%D9%85%DA%A9%D8%A7%D9%86%DB%8C%DA%A9%DB%8C.svg" alt="image" />'
+            }
             // cell={DropDownCell}
           />
           <GridColumn field="firstname" title="FirstName" width="200px" />
           <GridColumn field="lastname" title="LastName" width="200px" />
           <GridColumn field="username" title="Username" width="200px" />
-          <GridColumn field="confirmed" title="Confirmed" width="200px" />
-          <GridColumn field="isAdmin" title="IsAdmin" width="200px" />
-          <GridColumn field="gender" title="Gender" width="200px" />
+          <GridColumn
+            field="confirmed"
+            title="Confirmed"
+            width="200px"
+            editor="boolean"
+            filter="boolean"
+          />
+          <GridColumn
+            field="isAdmin"
+            title="IsAdmin"
+            width="200px"
+            editor="boolean"
+            filter="boolean"
+          />
+          <GridColumn
+            field="gender"
+            title="Gender"
+            width="200px"
+            editable={false}
+          />
           <GridColumn field="nationalId" title="NationalID" width="200px" />
           <GridColumn field="middlename" title="Middlename" width="200px" />
-          <GridColumn field="email" title="Email" width="200px" />
+          <GridColumn
+            field="email"
+            title="Email"
+            width="200px"
+            editor={"email"}
+          />
           <GridColumn field="address" title="Address" width="200px" />
           {/* <GridColumn field="ProductID" title="Id" width="50px" editable={false} />
           <GridColumn field="ProductName" title="Product Name" />

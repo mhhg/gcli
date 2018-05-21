@@ -24,6 +24,7 @@ class Login extends Component {
       username: "",
       password: "",
       isLoggedIn: false,
+      isSubmitted: false,
       isSocketAvailable: false
     };
 
@@ -33,20 +34,18 @@ class Login extends Component {
     this.callbackLogin = this.callbackLogin.bind(this);
 
     let tokenState = localStorage.getItem("superuser");
-    if (tokenState !=== null) {
+    if (tokenState !== null) {
       let user = JSON.parse(tokenState);
       if (user.token !== "") {
-        
+        Socket.emit(
+          "user:auth",
+          JSON.stringify({
+            token: tokenState.username
+          }),
+          this.callbackLogin
+        );
       }
     }
-    // Socket.emit(
-    //   "user:auth",
-    //   JSON.stringify({
-    //     username: "09039944234",
-    //     password: "123123"
-    //   }),
-    //   this.callbackLogin
-    // );
   }
 
   submitForm(event) {
@@ -64,6 +63,8 @@ class Login extends Component {
       return;
     }
 
+    this.setState({ isSubmitted: true });
+
     request = {
       username: this.state.username,
       password: this.state.password
@@ -78,7 +79,11 @@ class Login extends Component {
     console.log("[Login.callbackLogin] response:", response);
 
     if (response.code !== 200) {
-      alert("[DEBUG] unauthorized access. server response: " + stringResponse);
+      if (this.state.isSubmitted === true) {
+        alert(
+          "[DEBUG] unauthorized access. server response: " + stringResponse
+        );
+      }
       return;
     }
 
