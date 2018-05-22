@@ -4,13 +4,14 @@
 
 function FuncIsLoggedIn() {
   let state = localStorage.getItem('superuser');
+
   console.log("[INFO][FuncIsLoggedIn] state", state);
 
   if (state === null) {
     return false;
   }
 
-  return false
+  return true;
 }
 
 
