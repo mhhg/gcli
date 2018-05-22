@@ -28,64 +28,10 @@ import Socket from "../../socket";
 class DefaultLayout extends Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-      username: "",
-      password: "",
-      isLoggedIn: false,
-      isSubmitted: false,
-      isSocketAvailable: false
-    };
-
-    this.callbackLogin = this.callbackLogin.bind(this);
-
-    const localStorageSession = localStorage.getItem("superuser");
-    localStorage.clear("superuser");
-
-    if (localStorageSession !== null) {
-      const user = JSON.parse(localStorageSession);
-
-      if (user.token !== "") {
-        console.log(
-          "[DefaultLayout.constructor] parsed superuser session, user:",
-          user
-        );
-
-        const request = {
-          token: user.token
-        };
-
-        console.log("[DefaultLayout.constructor] emit login request:", request);
-
-        Socket.emit("user:auth", JSON.stringify(request), this.callbackLogin);
-      }
-    }
-  }
-
-  callbackLogin(stringResponse) {
-    let response = JSON.parse(stringResponse);
-
-    console.log("[DefaultLayout.callbackLogin] response:", response);
-
-    if (response.code !== 200) {
-      if (this.state.isSubmitted === true) {
-        alert(
-          "[DEBUG] unauthorized access. server response: " + stringResponse
-        );
-      }
-      return;
-    }
-
-    localStorage.setItem("superuser", stringResponse);
-
-    this.setState({
-      isLoggedIn: true,
-      isSocketAvailable: true
-    });
   }
 
   render() {
-    return this.state.isLoggedIn ? (
+    return FuncIsLoggedIn() ? (
       <div className="app">
         <AppHeader fixed>
           <DefaultHeader />

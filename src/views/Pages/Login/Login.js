@@ -15,6 +15,7 @@ import {
 import { Redirect } from "react-router-dom";
 
 import Socket from "../../../socket";
+import FuncIsLoggedIn from "../../../auth";
 
 class Login extends Component {
   constructor(props) {
@@ -70,10 +71,12 @@ class Login extends Component {
           "[DEBUG] unauthorized access. server response: " + stringResponse
         );
       }
+      localStorage.setItem("authState", "false");
       return;
     }
 
     localStorage.setItem("superuser", stringResponse);
+    localStorage.setItem("authState", "true");
 
     this.setState({
       isLoggedIn: true,
@@ -97,7 +100,15 @@ class Login extends Component {
     const { isLoggedIn } = this.state;
     const { isSocketAvailable } = this.state;
 
-    if (isLoggedIn && isSocketAvailable) {
+    if (localStorage.getItem("socketConnected") !== "true") {
+      return (
+        <div>
+          Connecting to the server... please wait.
+        </div>
+      )
+    }
+
+    if (FuncIsLoggedIn()) {
       return <Redirect to="/provider" />;
     }
 

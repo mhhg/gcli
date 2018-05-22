@@ -37,7 +37,7 @@ class DropDownCell extends GridCell {
 
   render() {
     return (
-      <img src="http://repo.reglazh.com/assets/images/markers/cat-%D9%85%DA%A9%D8%A7%D9%86%DB%8C%DA%A9%DB%8C.svg" />
+      <img src="" />
     );
 
     // const value = this.props.dataItem[this.props.field];
@@ -194,14 +194,17 @@ class User extends React.Component {
     const response = JSON.parse(stringResponse);
 
     console.log(
-      "[User.funcResponseCallback] response.users.length:",
-      response.users.length
+      "[User.funcResponseCallback] response.users:",
+      response
     );
 
     if (response === null) {
       // TODO: handle this issue by a timeout and
       // calling the pull request again
       return;
+    } else if (response.code !== 200) {
+
+      return
     }
 
     let fields = [];
@@ -817,9 +820,9 @@ class User extends React.Component {
             title="Image"
             editable={false}
             width="150px"
-            cell={
-              '<img src="http://repo.reglazh.com/assets/images/markers/cat-%D9%85%DA%A9%D8%A7%D9%86%DB%8C%DA%A9%DB%8C.svg" alt="image" />'
-            }
+            // cell={
+            //   '<img src="http://repo.reglazh.com/assets/images/markers/cat-%D9%85%DA%A9%D8%A7%D9%86%DB%8C%DA%A9%DB%8C.svg" alt="image" />'
+            // }
             // cell={DropDownCell}
           />
           <GridColumn field="firstname" title="FirstName" width="200px" />

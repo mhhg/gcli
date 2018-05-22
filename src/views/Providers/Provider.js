@@ -18,6 +18,8 @@ import {
   Collapse,
   Fade
 } from "reactstrap";
+import { Redirect } from "react-router-dom";
+import FuncIsLoggedIn from "../../auth";
 
 // import { sampleProducts } from './sample-products.jsx';
 
@@ -187,14 +189,13 @@ class Provider extends React.Component {
     // parse the response
     const response = JSON.parse(stringResponse);
 
-    console.log(
-      "[Provider.funcResponseCallback] response.providers.length:",
-      response.providers.length
-    );
+    console.log("[Provider.funcResponseCallback] response:", response);
 
     if (response === null) {
+      return;
       // TODO: handle this issue by a timeout and
       // calling the pull request again
+    } else if (response.code !== 200) {
       return;
     }
 

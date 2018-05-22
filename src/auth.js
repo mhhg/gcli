@@ -3,15 +3,17 @@
 // localStorage.removeItem('superuser');
 
 function FuncIsLoggedIn() {
-  let state = localStorage.getItem('superuser');
+  let state = localStorage.getItem('authState');
 
   console.log("[INFO][FuncIsLoggedIn] state", state);
 
-  if (state === null) {
-    return false;
+  if (state == "true") {
+    console.log("[INFO][FuncIsLoggedIn] state TRUE", state);
+    return true;
   }
+  console.log("[INFO][FuncIsLoggedIn] state FALSE", state);
 
-  return true;
+  return false;
 }
 
 
