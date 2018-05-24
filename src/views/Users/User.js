@@ -7,6 +7,7 @@ import {
 } from "@progress/kendo-react-grid";
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import Socket from "../../socket";
+import Server from "../../config";
 import {
   Badge,
   Card,
@@ -19,11 +20,31 @@ import {
   Fade
 } from "reactstrap";
 
-// import { sampleProducts } from './sample-products.jsx';
+// let sampleAvatar = require("assets/img/avatars/6.jpg");
 
-class DropDownCell extends GridCell {
+class AvatarCell extends GridCell {
   constructor(props) {
     super(props);
+
+    let imageSrc = Server.Addr + "/api/file/avatar/";
+
+    if (props.dataItem.imageId !== "") {
+      imageSrc = imageSrc + props.dataItem.imageId;
+    } else {
+      imageSrc = "assets/img/avatars/7.png";
+    }
+
+    console.log(
+      "[AvatarCell] imageSrc:",
+      imageSrc,
+      "props.imageId:",
+      props.dataItem.imageId,
+      "ServerAddr:", Server.Addr
+    );
+
+    this.state = {
+      imageSrc: imageSrc
+    };
   }
 
   handleChange(e) {
@@ -37,7 +58,17 @@ class DropDownCell extends GridCell {
 
   render() {
     return (
-      <img src="" />
+      <td style={{
+        padding: "2px"
+      }}>
+        <img
+          style={{
+            height: "71px",
+            width: "71px"
+          }}
+          src={this.state.imageSrc}
+        />
+      </td>
     );
 
     // const value = this.props.dataItem[this.props.field];
@@ -193,18 +224,14 @@ class User extends React.Component {
     // parse the response
     const response = JSON.parse(stringResponse);
 
-    console.log(
-      "[User.funcResponseCallback] response.users:",
-      response
-    );
+    console.log("[User.funcResponseCallback] response.users:", response);
 
     if (response === null) {
       // TODO: handle this issue by a timeout and
       // calling the pull request again
       return;
     } else if (response.code !== 200) {
-
-      return
+      return;
     }
 
     let fields = [];
@@ -405,7 +432,7 @@ class User extends React.Component {
         skip: this.state.skip,
         limit: this.state.limit,
         search: this.state.search,
-        filter: this.state.filter,
+        filter: event.filter,
         sort: this.state.sort
       }),
       this.callbackRead
@@ -814,17 +841,16 @@ class User extends React.Component {
               </button>
             )}
           </GridToolbar>
-          <GridColumn field="id" title="ID" editable={false} width="150px" />
           <GridColumn
             field="imageId"
             title="Image"
             editable={false}
-            width="150px"
-            // cell={
-            //   '<img src="http://repo.reglazh.com/assets/images/markers/cat-%D9%85%DA%A9%D8%A7%D9%86%DB%8C%DA%A9%DB%8C.svg" alt="image" />'
-            // }
-            // cell={DropDownCell}
+            sortable={false}
+            filterable={false}
+            width="73px"
+            cell={AvatarCell}
           />
+          <GridColumn field="id" title="ID" editable={false} width="150px" />
           <GridColumn field="firstname" title="FirstName" width="200px" />
           <GridColumn field="lastname" title="LastName" width="200px" />
           <GridColumn field="username" title="Username" width="200px" />

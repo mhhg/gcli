@@ -20,6 +20,7 @@ import {
 } from "reactstrap";
 import { Redirect } from "react-router-dom";
 import FuncIsLoggedIn from "../../auth";
+import Server from "../../config";
 
 // import { sampleProducts } from './sample-products.jsx';
 
@@ -59,6 +60,60 @@ class DropDownCell extends GridCell {
           ]}
           valueField="value"
           textField="text"
+        />
+      </td>
+    );
+  }
+}
+
+class AvatarCell extends GridCell {
+  constructor(props) {
+    super(props);
+
+    let imageSrc = Server.Addr + "/api/file/avatar/";
+
+    if (props.dataItem.imageId !== "") {
+      imageSrc = imageSrc + props.dataItem.imageId;
+    } else {
+      imageSrc = "assets/img/avatars/7.png";
+    }
+
+    console.log(
+      "[AvatarCell] imageSrc:",
+      imageSrc,
+      "props.imageId:",
+      props.dataItem.imageId,
+      "ServerAddr:",
+      Server.Addr
+    );
+
+    this.state = {
+      imageSrc: imageSrc
+    };
+  }
+
+  handleChange(e) {
+    this.props.onChange({
+      dataItem: this.props.dataItem,
+      field: this.props.field,
+      syntheticEvent: e.syntheticEvent,
+      value: e.target.value
+    });
+  }
+
+  render() {
+    return (
+      <td
+        style={{
+          padding: "2px"
+        }}
+      >
+        <img
+          style={{
+            height: "71px",
+            width: "71px"
+          }}
+          src={this.state.imageSrc}
         />
       </td>
     );
@@ -391,13 +446,33 @@ class Provider extends React.Component {
       this.state.filter
     );
 
+    console.log(
+      "[Provider.filterChange] before emit read request, event.filter:",
+      event.filter
+    );
+
+
+    this.setState({
+      filter: event.filter
+    });
+
+    console.log(
+      "[Provider.filterChange] before emit read request, this.state.filter:",
+      this.state.filter
+    );
+
+    console.log(
+      "[Provider.filterChange] before emit read request, event.filter:",
+      event.filter
+    );
+
     Socket.emit(
       "provider:read",
       JSON.stringify({
         skip: this.state.skip,
         limit: this.state.limit,
         search: this.state.search,
-        filter: this.state.filter,
+        filter: event.filter,
         sort: this.state.sort
       }),
       this.callbackRead
@@ -811,6 +886,15 @@ class Provider extends React.Component {
               </button>
             )}
           </GridToolbar>
+          <GridColumn
+            field="imageId"
+            title="Image"
+            editable={false}
+            sortable={false}
+            filterable={false}
+            width="73px"
+            cell={AvatarCell}
+          />
           <GridColumn field="id" title="ID" editable={false} width="150px" />
           <GridColumn field="name" title="Name" width="230px" />
           <GridColumn
@@ -846,7 +930,7 @@ class Provider extends React.Component {
             field="latitude"
             title="Latitude"
             sortable={false}
-            editor="numeric"
+            editable={false}
             filter="numeric"
             width="160px"
           />
@@ -854,7 +938,7 @@ class Provider extends React.Component {
             field="longitude"
             title="Longitude"
             sortable={false}
-            editor="numeric"
+            editable={false}
             filter="numeric"
             width="160px"
           />

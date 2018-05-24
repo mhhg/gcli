@@ -78,3 +78,4 @@ class DefaultLayout extends Component {
 }
 
 export default DefaultLayout;
+document.body.classList.toggle('sidebar-minimized');
