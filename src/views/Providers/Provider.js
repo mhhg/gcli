@@ -3,9 +3,9 @@ import {
   Grid,
   GridColumn,
   GridCell,
+  GridDetailRow,
   GridToolbar
 } from "@progress/kendo-react-grid";
-import { DropDownList } from "@progress/kendo-react-dropdowns";
 import Socket from "../../socket";
 import {
   Badge,
@@ -19,106 +19,13 @@ import {
   Fade
 } from "reactstrap";
 import { Redirect } from "react-router-dom";
+import { DropDownList } from "@progress/kendo-react-dropdowns";
+
 import FuncIsLoggedIn from "../../auth";
 import Server from "../../config";
-
-// import { sampleProducts } from './sample-products.jsx';
-
-class DropDownCell extends GridCell {
-  handleChange(e) {
-    this.props.onChange({
-      dataItem: this.props.dataItem,
-      field: this.props.field,
-      syntheticEvent: e.syntheticEvent,
-      value: e.target.value
-    });
-  }
-
-  render() {
-    const value = this.props.dataItem[this.props.field];
-
-    if (!this.props.dataItem.inEdit) {
-      return (
-        <td>
-          {value === null
-            ? ""
-            : this.props.dataItem[this.props.field].toString()}
-        </td>
-      );
-    }
-
-    return (
-      <td>
-        <DropDownList
-          style={{ width: "100px" }}
-          onChange={this.handleChange.bind(this)}
-          value={value}
-          data={[
-            { text: "yes", value: true },
-            { text: "no", value: false },
-            { text: "(empty)", value: null }
-          ]}
-          valueField="value"
-          textField="text"
-        />
-      </td>
-    );
-  }
-}
-
-class AvatarCell extends GridCell {
-  constructor(props) {
-    super(props);
-
-    let imageSrc = Server.Addr + "/api/file/avatar/";
-
-    if (props.dataItem.imageId !== "") {
-      imageSrc = imageSrc + props.dataItem.imageId;
-    } else {
-      imageSrc = "assets/img/avatars/7.png";
-    }
-
-    console.log(
-      "[AvatarCell] imageSrc:",
-      imageSrc,
-      "props.imageId:",
-      props.dataItem.imageId,
-      "ServerAddr:",
-      Server.Addr
-    );
-
-    this.state = {
-      imageSrc: imageSrc
-    };
-  }
-
-  handleChange(e) {
-    this.props.onChange({
-      dataItem: this.props.dataItem,
-      field: this.props.field,
-      syntheticEvent: e.syntheticEvent,
-      value: e.target.value
-    });
-  }
-
-  render() {
-    return (
-      <td
-        style={{
-          padding: "2px"
-        }}
-      >
-        <img
-          style={{
-            height: "71px",
-            width: "71px"
-          }}
-          src={this.state.imageSrc}
-        />
-      </td>
-    );
-  }
-}
+import DropDownCell from "./DropDownCell";
+import AvatarCell from "./AvatarCell";
+import DetailComponent from "./DetailComponent";
 
 let responseProviders = [];
 
@@ -140,6 +47,7 @@ class Provider extends React.Component {
     this.callbackRead = this.callbackRead.bind(this);
     this.callbackDelete = this.callbackDelete.bind(this);
     this.updateOwnerState = this.updateOwnerState.bind(this);
+    this.expandChange = this.expandChange.bind(this);
 
     // emit provider read request via socket.io, and
     // set the callback func to process the response
@@ -201,14 +109,16 @@ class Provider extends React.Component {
     class MyCommandCell extends GridCell {
       render() {
         return !this.props.dataItem.inEdit ? (
-          <td>
+          <td style={{ padding: "3px", margin: "3px"}}>
             <button
+            style={{ width: "75px", padding: "3px"}}
               className="k-primary k-button k-grid-edit-command btn-xs"
               onClick={() => enterEdit(this.props.dataItem)}
             >
               Edit
             </button>
             <button
+            style={{ width: "75px", padding: "3px"}}
               className="k-button k-grid-remove-command btn-xs"
               onClick={() =>
                 window.confirm(
@@ -220,14 +130,16 @@ class Provider extends React.Component {
             </button>
           </td>
         ) : (
-          <td>
+          <td style={{ padding: "3px", margin: "3px"}}>
             <button
+            style={{ width: "75px", padding: "3px"}}
               className="k-button k-grid-save-command btn-sm"
               onClick={() => save(this.props.dataItem)}
             >
               {this.props.dataItem.id ? "Update" : "Add"}
             </button>
             <button
+            style={{ width: "75px", padding: "3px"}}
               className="k-button k-grid-cancel-command btn-sm"
               onClick={() => cancel(this.props.dataItem)}
             >
@@ -451,7 +363,6 @@ class Provider extends React.Component {
       event.filter
     );
 
-
     this.setState({
       filter: event.filter
     });
@@ -560,12 +471,17 @@ class Provider extends React.Component {
     this.setState({ fadeIn: !this.state.fadeIn });
   }
 
+  expandChange(event) {
+    console.log("[expandChange] event:", event);
+
+    event.dataItem.expanded = !event.dataItem.expanded;
+    this.forceUpdate();
+  }
+
   render() {
     return (
       <div>
         <Col
-          xs="12"
-          sm="12"
           md="12"
           style={{
             padding: "0px",
@@ -848,6 +764,9 @@ class Provider extends React.Component {
         </Col>
         <Grid
           data={this.state.data}
+          detail={DetailComponent}
+          expandField="expanded"
+          expandChange={this.expandChange}
           pageChange={this.onPageChange.bind(this)}
           skip={this.state.skip}
           total={this.state.total}
@@ -887,15 +806,20 @@ class Provider extends React.Component {
             )}
           </GridToolbar>
           <GridColumn
+            cell={this.CommandCell}
+            width="110px"
+            sortable={false}
+            filterable={false}
+          />
+          <GridColumn
             field="imageId"
             title="Image"
             editable={false}
             sortable={false}
             filterable={false}
-            width="73px"
+            width="90px"
             cell={AvatarCell}
           />
-          <GridColumn field="id" title="ID" editable={false} width="150px" />
           <GridColumn field="name" title="Name" width="230px" />
           <GridColumn
             field="isConfirmed"
@@ -942,6 +866,7 @@ class Provider extends React.Component {
             filter="numeric"
             width="160px"
           />
+          <GridColumn field="id" title="ID" editable={false} width="163px" />
 
           {/* <GridColumn field="ProductID" title="Id" width="50px" editable={false} />
           <GridColumn field="ProductName" title="Product Name" />
@@ -949,12 +874,6 @@ class Provider extends React.Component {
             editor="date" format="{0:d}" />
           <GridColumn field="UnitsInStock" title="Units" editor="numeric" />
           <GridColumn field="Discontinued" cell={DropDownCell} /> */}
-          <GridColumn
-            cell={this.CommandCell}
-            width="235px"
-            sortable={false}
-            filterable={false}
-          />
         </Grid>
       </div>
     );
