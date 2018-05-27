@@ -39,6 +39,7 @@
 
 
 const Addr = "http://0.0.0.0";
+// const Addr = "http://repo.reglazh.com";
 
 module.exports = {
   Addr: Addr

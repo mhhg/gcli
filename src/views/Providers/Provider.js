@@ -340,7 +340,7 @@ class Provider extends React.Component {
         limit: this.state.limit,
         search: this.state.search,
         filter: this.state.filter,
-        sort: this.state.sort
+        sort: event.sort3
       }),
       this.callbackRead
     );
@@ -871,7 +871,7 @@ class Provider extends React.Component {
           {/* <GridColumn field="ProductID" title="Id" width="50px" editable={false} />
           <GridColumn field="ProductName" title="Product Name" />
           <GridColumn field="FirstOrderedOn" title="First Ordered" 
-            editor="date" format="{0:d}" />
+            editor="date" format="{0: }" />
           <GridColumn field="UnitsInStock" title="Units" editor="numeric" />
           <GridColumn field="Discontinued" cell={DropDownCell} /> */}
         </Grid>
@@ -881,3 +881,4 @@ class Provider extends React.Component {
 }
 
 export default Provider;
+// /#/service-center/5acb2a04bd85d9627701cfd9
