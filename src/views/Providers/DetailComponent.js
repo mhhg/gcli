@@ -25,78 +25,95 @@ class DetailComponent extends GridDetailRow {
   }
 
   render() {
-    const data = this.props.dataItem.attachments;
-    console.log("[DetailComponent.render] attachments:", data);
+    const data = this.props.dataItem;
+    console.log("[DetailComponent.render] data:", data);
 
-    if (data) {
+    if (data.ownerId === "") {
       return (
-        <div className="animated fadeIn" >
-          <Row>
-            {data.map((attachment, index) => {
-              return (
-                <Col xs="12" sm="4" md="3" key={attachment.fileId}>
-                  <Card style={{ marginRight: "3px", marginLeft: "3px" }}>
-                    <CardHeader
-                      style={{
-                        margin: "1px",
-                        // padding: "1px"
-                      }}
-                    >
-                      {attachment.description}
-                      <AppSwitch
-                        className={"float-right mb-0"}
-                        label
-                        color={"info"}
-                        defaultChecked
-                        size={"sm"}
-                      />
-                    </CardHeader>
-                    <CardBody
-                      style={{
-                        margin: "1px",
-                        padding: "1px"
-                      }}
-                    >
-                      <img
-                        style={{
-                          width: "100%",
-                          maxHeight: "293px",
-                          height: "100%"
-                          // display: "block",
-                          // position: "absolute",
-                          // top: "50%",
-                          // left: "50%",
-                          // minHeight: "100%",
-                          // minWidth: "100%",
-                          // transform: "translate(-50%, -50%)"
-                        }}
-                        src={
-                          Server.Addr +
-                          ":8000/api/file/download/" +
-                          attachment.fileId
-                        }
-                      />
-                    </CardBody>
-                  </Card>
-                </Col>
-              );
-            })}
-          </Row>
-        </div>
-        // <Grid data={data}>
-        //   <Column field="ProductID" title="Product ID" width="120px" />
-        //   <Column field="ProductName" title="Product Name" />
-        //   <Column field="UnitPrice" title="Unit Price" format="{0:c}" />
-        // </Grid>
+        <p>There is no data available for this provider</p>
+        // <div style={{ height: "50px", width: "100%" }}>
+        //   <div style={{ position: "absolute", width: "100%" }}>
+        //     <div className="k-loading-image" />
+        //   </div>
+        // </div>
       );
     }
+
+    let attachmentsRow;
+
+    if (data.attachments !== null) {
+      attachmentsRow = (
+        <Row>
+          {data.attachments.map((attachment, index) => {
+            return (
+              <Col xs="12" sm="4" md="3" key={attachment.fileId}>
+                <Card style={{ marginRight: "3px", marginLeft: "3px" }}>
+                  <CardHeader
+                    style={{
+                      margin: "1px"
+                      // padding: "1px"
+                    }}
+                  >
+                    {attachment.description}
+                    <AppSwitch
+                      className={"float-right mb-0"}
+                      label
+                      color={"info"}
+                      defaultChecked
+                      size={"sm"}
+                    />
+                  </CardHeader>
+                  <CardBody
+                    style={{
+                      margin: "1px",
+                      padding: "1px"
+                    }}
+                  >
+                    <img
+                      style={{
+                        width: "100%",
+                        maxHeight: "293px",
+                        height: "100%"
+                      }}
+                      src={
+                        Server.Addr +
+                        ":8000/api/file/download/" +
+                        attachment.fileId
+                      }
+                    />
+                  </CardBody>
+                </Card>
+              </Col>
+            );
+          })}
+        </Row>
+      );
+    }
+
+    let ownerDetails;
+
+    if (data.owner != null) {
+      ownerDetails = (
+        <div>
+          <p>name: {data.owner.firstName + " " + data.owner.lastName}</p>
+          <p>username: {data.owner.username}</p>
+          <p>nationalId: {data.owner.nationalId}</p>
+          <p>imageId: {data.owner.imageId}</p>
+        </div>
+      );
+    }
+
+    const link = Server.Addr + "/#/service-center/" + data.id;
+    console.log("[DetailComponent] link:", link);
+
     return (
-      <p>There is no attachments available for this provider</p>
-      // <div style={{ height: "50px", width: "100%" }}>
-      //   <div style={{ position: "absolute", width: "100%" }}>
-      //     <div className="k-loading-image" />
-      //   </div>
-      // </div>
+      <div className="animated fadeIn">
+        <p>
+          <a href={link}>Link to {data.name} </a>
+        </p>
+        {ownerDetails}
+        {attachmentsRow}
+      </div>
     );
   }
 }

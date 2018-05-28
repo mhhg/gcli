@@ -13,9 +13,13 @@ localStorage.setItem("socketConnected", "false");
 let Socket = io.connect(Server.Addr + ":5000", {});
 
 Socket.on("connect", function(str, a, b) {
+  
   console.log("[Socket][connection established]");
+  
   localStorage.setItem("socketConnected", "true");
+  
   ReactDOM.render(<App />, document.getElementById("root"));
+  
   Socket.emit("user:auth", localStorage.getItem("superuser"), callbackLogin);
 });
 
@@ -41,6 +45,7 @@ function callbackLogin(stringResponse) {
 
   localStorage.setItem("superuser", stringResponse);
   localStorage.setItem("authState", "true");
+  
   ReactDOM.render(<App />, document.getElementById("root"));
 }
 
