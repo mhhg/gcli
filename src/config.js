@@ -38,9 +38,12 @@
 
 
 
-const Addr = "http://0.0.0.0";
+// const Addr = "http://0.0.0.0";
 // const Addr = "http://repo.reglazh.com";
+const Addr = "http://app.reglazh.com";
+const Port = "80";
 
 module.exports = {
-  Addr: Addr
+  Addr: Addr,
+  Port: Port
 }

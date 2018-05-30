@@ -42,6 +42,15 @@ class DetailComponent extends GridDetailRow {
     let attachmentsRow;
 
     if (data.attachments !== null) {
+
+      let src = Server.Addr;
+      if (Server.Port !== "80") {
+        src += ":" + Server.Port;
+      }
+      src += "/api/file/download/";
+
+      console.log("[DetailComponent] image src:", src);
+
       attachmentsRow = (
         <Row>
           {data.attachments.map((attachment, index) => {
@@ -75,11 +84,7 @@ class DetailComponent extends GridDetailRow {
                         maxHeight: "293px",
                         height: "100%"
                       }}
-                      src={
-                        Server.Addr +
-                        ":8000/api/file/download/" +
-                        attachment.fileId
-                      }
+                      src={src + attachment.fileId}
                     />
                   </CardBody>
                 </Card>
@@ -104,6 +109,7 @@ class DetailComponent extends GridDetailRow {
     }
 
     const link = Server.Addr + "/#/service-center/" + data.id;
+
     console.log("[DetailComponent] link:", link);
 
     return (
