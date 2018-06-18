@@ -15,7 +15,7 @@ export default class Dialog extends React.Component {
                                 aria-label="Close"
                                 className="k-button k-bare k-button-icon ' +
                                     'k-window-action k-dialog-action k-dialog-close"
-                                href="#"
+                                
                                 onClick={() => this.props.close()}
                                 role="button"
                             >
