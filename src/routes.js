@@ -27,12 +27,18 @@ const Map = Loadable({
     loading: Loading
 });
 
+const External = Loadable({
+    loader: () => import("./views/External/main"),
+    loading: Loading
+});
+
 const routes = [
     { path: "/", exact: true, name: "Home", component: DefaultLayout },
     { path: "/login", exact: true, name: "Login", component: Login },
     { path: "/user", name: "User", component: Users },
     { path: "/provider", name: "Provider", component: Providers },
-    { path: "/map", name: "Map", component: Map }
+    { path: "/map", name: "Map", component: Map },
+    { path: "/mozhgan", name: "mozhgan", component: External }
 ];
 
 export default routes;

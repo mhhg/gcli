@@ -39,6 +39,15 @@ export default {
             }
         },
         {
+            name: "mozhgan",
+            url: "/mozhgan",
+            icon: "icon-grid",
+            badge: {
+                variant: "info",
+                text: ""
+            }
+        },
+        {
             name: "Map",
             url: "/map",
             icon: "icon-map",

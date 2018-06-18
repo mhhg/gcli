@@ -935,7 +935,7 @@ class Provider extends React.Component {
         );
 
         return (
-            <div>
+            <div>              
                 {columnCard}
                 {grid}
             </div>

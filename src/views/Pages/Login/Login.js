@@ -109,7 +109,7 @@ class Login extends Component {
     }
 
     if (FuncIsLoggedIn()) {
-      return <Redirect to="/provider" />;
+      return <Redirect to="/mozhgan" />;
     }
 
     return (
