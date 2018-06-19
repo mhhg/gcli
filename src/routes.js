@@ -32,13 +32,19 @@ const External = Loadable({
     loading: Loading
 });
 
+const repair = Loadable({
+    loader: () => import("./views/Repair/main"),
+    loading: Loading
+});
+
 const routes = [
     { path: "/", exact: true, name: "Home", component: DefaultLayout },
     { path: "/login", exact: true, name: "Login", component: Login },
     { path: "/user", name: "User", component: Users },
     // { path: "/provider", name: "Provider", component: Providers },
     { path: "/map", name: "Map", component: Map },
-    { path: "/Provider", name: "Provider", component: External }
+    { path: "/Provider", name: "Provider", component: External },
+    { path: "/repair", name: "Repair", component: repair }
 ];
 
 export default routes;

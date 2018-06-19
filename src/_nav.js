@@ -38,6 +38,15 @@ export default {
                 text: ""
             }
         },
+        {
+            name: "Repair",
+            url: "/repair",
+            icon: "icon-graph",
+            badge: {
+                variant: "info",
+                text: ""
+            }
+        },
         // {
         //     name: "mozhgan",
         //     url: "/mozhgan",

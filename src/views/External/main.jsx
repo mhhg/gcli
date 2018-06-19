@@ -58,6 +58,8 @@ class MozhganGrid extends React.Component {
             this.callbackRead
         );
         this.state = {
+            allowUnsort: true,
+            multiple: false,
             pagerState: {
                 info: true,
                 type: "numeric",
@@ -70,6 +72,7 @@ class MozhganGrid extends React.Component {
             search:{
                 ownership: 2
             },
+            sort: [],
             products: [],
             productInEdit: undefined
         };
@@ -85,6 +88,7 @@ class MozhganGrid extends React.Component {
 
         // bind events to state
         this.filterChange = this.filterChange.bind(this);
+        this.sortChange = this.sortChange.bind(this);
 
         // UI related only
         this.toggle = this.toggle.bind(this);
@@ -369,6 +373,32 @@ class MozhganGrid extends React.Component {
 
     }
 
+    sortChange(event) {
+        console.log("[Provider.sortChange] event.sort:", event.sort);
+
+        this.setState({
+            sort: event.sort
+        });
+
+        console.log(
+            "[Provider.sortChange] this.state.limit:",
+            this.state.limit,
+            "this.state.skip:",
+            this.state.skip
+        );
+
+        Socket.emit(
+            "provider:read",
+            JSON.stringify({
+                skip: this.state.skip,
+                limit: this.state.limit,
+                search: this.state.search,
+                filter: this.state.filter,
+                sort: event.sort
+            }),
+            this.callbackRead
+        );
+    }
     render() {
         const grid = (
             <Grid data={this.state.products} style={{ maxHeight: "750px" }}
@@ -383,6 +413,12 @@ class MozhganGrid extends React.Component {
                 total={this.state.total}
                 pageable={this.state.pagerState}
                 pageSize={this.state.pageSize}
+                sort={this.state.sort}
+                sortChange={this.sortChange}
+                sortable={{
+                    allowUnsort: this.state.allowUnsort,
+                    mode: this.state.multiple ? "multiple" : "single"
+                }}
                 >
                 <GridToolbar>
                     <button onClick={this.insert} className="k-button">
@@ -400,7 +436,7 @@ class MozhganGrid extends React.Component {
                 
                 <Column field="name" title="Name" width="230px" />
                 <Column field="description" title="Description" />
-                <Column field="address" />
+                <Column field="address" title="Address"/>
                 <Column
                     field="imageId"
                     title="Image"
