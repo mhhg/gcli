@@ -1,25 +1,10 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import {
-    Grid,
-    GridColumn as Column,
-    GridToolbar
-} from "@progress/kendo-react-grid";
-import { Input, NumericTextBox } from "@progress/kendo-react-inputs";
-import Dialog from "./dialog.jsx";
-import cellWithEditing from "./cellWithEditing.jsx";
-import Socket from "../../socket";
-import { 
-    Badge,
-    Card,
-    CardBody,
-    CardFooter,
-    CardHeader,
-    Col,
-    Row,
-    Collapse,
-    Fade 
-} from "reactstrap";
+import { Grid, GridColumn as Column } from '@progress/kendo-react-grid';
+import { Input, NumericTextBox } from '@progress/kendo-react-inputs';
+import React from 'react';
+import { Card, CardBody, CardHeader, Col, Collapse, Fade } from 'reactstrap';
+// import cellWithEditing from './cellWithEditing.jsx';
+import Socket from '../../socket';
+import Dialog from './dialog.jsx';
 
 class Repair extends React.Component {
     constructor(props) {
@@ -29,7 +14,7 @@ class Repair extends React.Component {
         this.defaultButtonCount = 5;
         // set initial filter state
         const initialFilter = {
-            logic: "and",
+            logic: 'and',
             filters: []
         };
         // bind state to callback events which will be
@@ -38,7 +23,7 @@ class Repair extends React.Component {
         // emit repair read request via socket.io, and
         // set the callback func to process the response
         Socket.emit(
-            "repair:read",
+            'repair:read',
             JSON.stringify({
                 skip: 0,
                 limit: this.defaultPageSize,
@@ -62,7 +47,7 @@ class Repair extends React.Component {
             multiple: false,
             pagerState: {
                 info: true,
-                type: "numeric",
+                type: 'numeric',
                 pageSizes: [5, 10, 25, 50, 75, 100],
                 previousNext: true,
                 pageSize: this.defaultPageSize,
@@ -92,7 +77,7 @@ class Repair extends React.Component {
     callbackRead(stringResponse) {
         // parse the response
         const response = JSON.parse(stringResponse);
-        console.log("[Repair.funcResponseCallback] response:", response);
+        console.log('[Repair.funcResponseCallback] response:', response);
 
         if (response === null) {
             return;
@@ -125,21 +110,21 @@ class Repair extends React.Component {
     }
 
     sortChange(event) {
-        console.log("[Provider.sortChange] event.sort:", event.sort);
+        console.log('[Repair.sortChange] event.sort:', event.sort);
 
         this.setState({
             sort: event.sort
         });
 
         console.log(
-            "[Provider.sortChange] this.state.limit:",
+            '[Repair.sortChange] this.state.limit:',
             this.state.limit,
-            "this.state.skip:",
+            'this.state.skip:',
             this.state.skip
         );
 
         Socket.emit(
-            "repair:read",
+            'repair:read',
             JSON.stringify({
                 skip: this.state.skip,
                 limit: this.state.limit,
@@ -152,9 +137,9 @@ class Repair extends React.Component {
     }
     onPageChange(e) {
         console.log(
-            "[Repair.eventOnPageChange] e.page.skip:",
+            '[Repair.eventOnPageChange] e.page.skip:',
             e.page.skip,
-            "e.page.limit:",
+            'e.page.limit:',
             e.page.limit
         );
 
@@ -164,7 +149,7 @@ class Repair extends React.Component {
         });
 
         Socket.emit(
-            "repair:read",
+            'repair:read',
             JSON.stringify({
                 skip: e.page.skip,
                 limit: e.page.take,
@@ -176,19 +161,19 @@ class Repair extends React.Component {
         );
     }
     filterChange(event) {
-        console.log("[Repair.filterChange] event.filter:", event.filter);
+        console.log('[Repair.filterChange] event.filter:', event.filter);
 
         this.setState({
             filter: event.filter
         });
 
         console.log(
-            "[Repair.filterChange] before emit read request, this.state.filter:",
+            '[Repair.filterChange] before emit read request, this.state.filter:',
             this.state.filter
         );
 
         console.log(
-            "[Repair.filterChange] before emit read request, event.filter:",
+            '[Repair.filterChange] before emit read request, event.filter:',
             event.filter
         );
 
@@ -197,17 +182,17 @@ class Repair extends React.Component {
         });
 
         console.log(
-            "[Repair.filterChange] before emit read request, this.state.filter:",
+            '[Repair.filterChange] before emit read request, this.state.filter:',
             this.state.filter
         );
 
         console.log(
-            "[Repair.filterChange] before emit read request, event.filter:",
+            '[Repair.filterChange] before emit read request, event.filter:',
             event.filter
         );
 
         Socket.emit(
-            "repair:read",
+            'repair:read',
             JSON.stringify({
                 skip: this.state.skip,
                 limit: this.state.limit,
@@ -270,7 +255,7 @@ class Repair extends React.Component {
     onDialogInputChange(event) {
         const target = event.target;
         const value =
-            target.type === "checkbox" ? target.checked : target.value;
+            target.type === 'checkbox' ? target.checked : target.value;
         const name = target.props ? target.props.name : target.name;
 
         const edited = this.cloneProduct(this.state.productInEdit);
@@ -281,12 +266,7 @@ class Repair extends React.Component {
         });
     }
     updatePagerState(key, value) {
-        console.log(
-            "[Repair.funcUpdatePagerState] key:",
-            key,
-            "value:",
-            value
-        );
+        console.log('[Repair.funcUpdatePagerState] key:', key, 'value:', value);
 
         const newPagerState = Object.assign({}, this.state.pagerState, {
             [key]: value
@@ -300,9 +280,9 @@ class Repair extends React.Component {
     }
     updateOwnerState(key, value) {
         console.log(
-            "[Repair.funcUpdateOwnershipState] key:",
+            '[Repair.funcUpdateOwnershipState] key:',
             key,
-            "value:",
+            'value:',
             value
         );
 
@@ -313,13 +293,13 @@ class Repair extends React.Component {
         });
 
         console.log(
-            "[Repair.funcUpdateOwnershipState] after update",
-            "this.state.objectSearchState:",
+            '[Repair.funcUpdateOwnershipState] after update',
+            'this.state.objectSearchState:',
             this.state.filter
         );
 
         Socket.emit(
-            "repair:read",
+            'repair:read',
             JSON.stringify({
                 skip: 0,
                 limit: this.defaultPageSize,
@@ -339,82 +319,13 @@ class Repair extends React.Component {
     }
 
     expandChange(event) {
-        console.log("[expandChange] event:", event);
+        console.log('[expandChange] event:', event);
 
         event.dataItem.expanded = !event.dataItem.expanded;
         this.forceUpdate();
     }
-    
-    render() {
-        const ownershipState = (
-            <dl>
-                <dt>Ownership status filter:</dt>
-                <dd>
-                    <input
-                        type="radio"
-                        name="ownership"
-                        id="ownershipTemplate"
-                        className="k-radio"
-                        value="1"
-                        onChange={e => {
-                            this.updateOwnerState("type", e.target.value);
-                        }}
-                    />
-                    <label
-                        style={{
-                            margin: "7px 3em 7px 0px",
-                            lineHeight: "1.2"
-                        }}
-                        className="k-radio-label"
-                        htmlFor="ownershipTemplate"
-                    >
-                        Template (Excel)&nbsp;
-                    </label> 
-                    <input
-                        defaultChecked={true}
-                        type="radio"
-                        name="ownership"
-                        id="ownershipRegistered"
-                        className="k-radio"
-                        value="2"
-                        onChange={e => {
-                            this.updateOwnerState("type", e.target.value);
-                        }}
-                    />
-                    <label
-                        style={{
-                            margin: "7px 3em 7px 0px",
-                            lineHeight: "1.2"
-                        }}
-                        className="k-radio-label"
-                        htmlFor="ownershipRegistered"
-                    >
-                        Registered&nbsp;
-                    </label>
-                    <input
-                        type="radio"
-                        name="ownership"
-                        id="ownershipAll"
-                        className="k-radio"
-                        value="0"
-                        onChange={e => {
-                            this.updateOwnerState("type", e.target.value);
-                        }}
-                    />
-                    <label
-                        style={{
-                            margin: "7px 3em 7px 0px",
-                            lineHeight: "1.2"
-                        }}
-                        className="k-radio-label"
-                        htmlFor="ownershipAll"
-                    >
-                        All&nbsp;
-                    </label>
-                </dd>
-            </dl>
 
-        );
+    render() {
         const filterState = (
             <dl>
                 <dt>Filter state:</dt>
@@ -434,8 +345,8 @@ class Repair extends React.Component {
                         htmlFor="unsort"
                         className="k-checkbox-label"
                         style={{
-                            lineHeight: "1.2",
-                            marginBottom: "1em"
+                            lineHeight: '1.2',
+                            marginBottom: '1em'
                         }}
                     >
                         Enable UnSorting
@@ -455,7 +366,7 @@ class Repair extends React.Component {
                     <label
                         htmlFor="multiSort"
                         className="k-checkbox-label"
-                        style={{ lineHeight: "1.2" }}
+                        style={{ lineHeight: '1.2' }}
                     >
                         Enable multiple columns sorting
                     </label>
@@ -475,13 +386,13 @@ class Repair extends React.Component {
                         value="numeric"
                         defaultChecked={true}
                         onChange={e => {
-                            this.updatePagerState("type", e.target.value);
+                            this.updatePagerState('type', e.target.value);
                         }}
                     />
                     <label
                         style={{
-                            margin: "7px 3em 7px 0px",
-                            lineHeight: "1.2"
+                            margin: '7px 3em 7px 0px',
+                            lineHeight: '1.2'
                         }}
                         className="k-radio-label"
                         htmlFor="numeric"
@@ -495,13 +406,13 @@ class Repair extends React.Component {
                         className="k-radio"
                         value="input"
                         onChange={e => {
-                            this.updatePagerState("type", e.target.value);
+                            this.updatePagerState('type', e.target.value);
                         }}
                     />
                     <label
                         style={{
-                            margin: "7px 3em 7px 0px",
-                            lineHeight: "1.2"
+                            margin: '7px 3em 7px 0px',
+                            lineHeight: '1.2'
                         }}
                         className="k-radio-label"
                         htmlFor="input"
@@ -522,7 +433,7 @@ class Repair extends React.Component {
                             id="showInfo"
                             type="checkbox"
                             onChange={e => {
-                                this.updatePagerState("info", e.target.checked);
+                                this.updatePagerState('info', e.target.checked);
                             }}
                         />
                         <label htmlFor="showInfo" className="k-checkbox-label">
@@ -537,7 +448,7 @@ class Repair extends React.Component {
                             type="checkbox"
                             onChange={e => {
                                 this.updatePagerState(
-                                    "pageSizes",
+                                    'pageSizes',
                                     e.target.checked
                                 );
                             }}
@@ -554,7 +465,7 @@ class Repair extends React.Component {
                             id="previousNext"
                             onChange={e => {
                                 this.updatePagerState(
-                                    "previousNext",
+                                    'previousNext',
                                     e.target.checked
                                 );
                             }}
@@ -580,7 +491,7 @@ class Repair extends React.Component {
                         type="number"
                         onChange={e => {
                             this.updatePagerState(
-                                "buttonCount",
+                                'buttonCount',
                                 e.target.valueAsNumber
                             );
                         }}
@@ -606,10 +517,9 @@ class Repair extends React.Component {
 
         const cardBody = (
             <div className="col-md-12 row">
-                <div className="col-md-3">{ownershipState}</div>
-                <div className="col-md-2">{filterState}</div>
-                <div className="col-md-2">{pagerTypeState}</div>
-                <div className="col-md-2">{infoState}</div>
+                <div className="col-md-3">{filterState}</div>
+                <div className="col-md-3">{pagerTypeState}</div>
+                <div className="col-md-3">{infoState}</div>
                 <div className="col-md-3">{buttonsState}</div>
             </div>
         );
@@ -617,7 +527,7 @@ class Repair extends React.Component {
         const card = (
             <Card
                 className="card-accent-primary"
-                style={{ padding: "0px", marginBottom: "5px" }}
+                style={{ padding: '0px', marginBottom: '5px' }}
             >
                 {cardHeader}
                 <Collapse isOpen={this.state.collapse} id="collapseExample">
@@ -629,19 +539,18 @@ class Repair extends React.Component {
         );
 
         const columnCard = (
-            <Col md="12" style={{ padding: "0px", marginBottom: "5px" }}>
+            <Col md="12" style={{ padding: '0px', marginBottom: '5px' }}>
                 <Fade timeout={this.state.timeout} in={this.state.fadeIn}>
                     {card}
                 </Fade>
             </Col>
         );
         return (
-
             <div>
                 {columnCard}
                 <Grid
                     data={this.state.data}
-                    style={{ maxHeight: "750px" }}
+                    style={{ maxHeight: '750px' }}
                     skip={this.state.skip}
                     total={this.state.total}
                     pageable={this.state.pagerState}
@@ -653,7 +562,7 @@ class Repair extends React.Component {
                     sortChange={this.sortChange}
                     sortable={{
                         allowUnsort: this.state.allowUnsort,
-                        mode: this.state.multiple ? "multiple" : "single"
+                        mode: this.state.multiple ? 'multiple' : 'single'
                     }}
                     pageChange={this.onPageChange.bind(this)}
                 >
@@ -662,24 +571,28 @@ class Repair extends React.Component {
                             Add New
                         </button>
                     </GridToolbar> */}
-                    <Column field="requestId" title="ID" width="50px" />
+                    <Column field="requestId" title="ID" width="150px" />
                     <Column
                         field="providerId"
                         title="ProviderID"
+                        width="150px"
+                    />
+                    <Column field="firstname" title="Firstname" width="200px" />
+                    <Column field="lastname" title="Lastname" width="200px" />
+                    <Column
+                        field="description"
+                        title="Description"
                         width="200px"
                     />
-                    <Column field="firstname" title="Firstname"  width="110px"/>
-                    <Column field="lastname" title="Lastname"  width="200px"/>
-                    <Column field="description" title="Description"  width="200px"/>
-                    <Column field="model" title="Model"  width="200px"/>
-                    <Column field="lpn" title="LPN"  width="200px"/>
+                    <Column field="model" title="Model" width="200px" />
+                    <Column field="lpn" title="LPN" width="200px" />
                     <Column field="date" title="Date" />
                     <Column field="time" title="Time" />
                     <Column field="mobile" title="Mobile" />
-                    <Column field="voucher" title="Voucher"  width="200px"/>
-                    <Column field="service" title="Service"  width="200px"/>
-                    <Column field="latitude" title="Latitude"  width="200px"/>
-                    <Column field="longitude" title="Longitude"  width="200px"/>
+                    <Column field="voucher" title="Voucher" width="200px" />
+                    <Column field="service" title="Service" width="200px" />
+                    <Column field="latitude" title="Latitude" width="200px" />
+                    <Column field="longitude" title="Longitude" width="200px" />
 
                     {/* <Column
                         title="Edit"
@@ -694,7 +607,7 @@ class Repair extends React.Component {
                         cancel={this.cancel}
                     >
                         <form onSubmit={this.handleSubmit}>
-                            <div style={{ marginBottom: "1rem" }}>
+                            <div style={{ marginBottom: '1rem' }}>
                                 <label>
                                     Product Name<br />
                                     <Input
@@ -702,13 +615,13 @@ class Repair extends React.Component {
                                         name="ProductName"
                                         value={
                                             this.state.productInEdit
-                                                .ProductName || ""
+                                                .ProductName || ''
                                         }
                                         onChange={this.onDialogInputChange}
                                     />
                                 </label>
                             </div>
-                            <div style={{ marginBottom: "1rem" }}>
+                            <div style={{ marginBottom: '1rem' }}>
                                 <label>
                                     Units In Stock<br />
                                     <NumericTextBox
@@ -744,7 +657,7 @@ class Repair extends React.Component {
 
     dialogTitle() {
         return `${
-            this.state.productInEdit.ProductID === undefined ? "Add" : "Edit"
+            this.state.productInEdit.ProductID === undefined ? 'Add' : 'Edit'
         } product`;
     }
     cloneProduct(product) {
@@ -753,17 +666,17 @@ class Repair extends React.Component {
 
     newProduct(source) {
         const newProduct = {
-            ProductID: "",
-            firstname: "",
-            Lastname: "",
-            description: "",
-            model: "",
-            lpn: "",
-            date: "",
-            time: "",
-            mobile: "",
-            voucher: "",
-            service: "",
+            ProductID: '',
+            firstname: '',
+            Lastname: '',
+            description: '',
+            model: '',
+            lpn: '',
+            date: '',
+            time: '',
+            mobile: '',
+            voucher: '',
+            service: '',
             latitude: 0.0,
             longitude: 0.0
         };
