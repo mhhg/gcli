@@ -6,12 +6,12 @@ export default function cellWithEditing(edit, remove) {
         render() {
             return (
                 <td>
-                    <button
+                    {/* <button
                         className="k-primary k-button k-grid-edit-command"
                         onClick={() => { edit(this.props.dataItem); }}
                     >
                         Edit
-                    </button>
+                    </button> */}
                     &nbsp;
                     <button
                         className="k-button k-grid-remove-command"

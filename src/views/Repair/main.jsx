@@ -2,11 +2,12 @@ import { Grid, GridColumn as Column } from '@progress/kendo-react-grid';
 import { Input, NumericTextBox } from '@progress/kendo-react-inputs';
 import React from 'react';
 import { Card, CardBody, CardHeader, Col, Collapse, Fade } from 'reactstrap';
-// import cellWithEditing from './cellWithEditing.jsx';
+import cellWithEditing from './cellWithEditing.jsx';
 import Socket from '../../socket';
 import Dialog from './dialog.jsx';
 import DetailComponent from "./DetailComponent";
-
+import { Redirect } from "react-router-dom";
+import { DropDownList } from "@progress/kendo-react-dropdowns";
 
 class Repair extends React.Component {
     constructor(props) {
@@ -23,6 +24,7 @@ class Repair extends React.Component {
         // triggered when the server response fetched
         this.callbackRead = this.callbackRead.bind(this);
         this.expandChange = this.expandChange.bind(this);
+        const remove = this.remove.bind(this);
         // emit repair read request via socket.io, and
         // set the callback func to process the response
         Socket.emit(
@@ -112,6 +114,8 @@ class Repair extends React.Component {
         });
     }
 
+
+
     sortChange(event) {
         console.log('[Repair.sortChange] event.sort:', event.sort);
 
@@ -136,6 +140,27 @@ class Repair extends React.Component {
                 sort: event.sort
             }),
             this.callbackRead
+        );
+    }
+
+    remove(dataItem) {
+        console.log("[repair.remove] dataItem:", dataItem);
+
+        dataItem.inEdit = undefined;
+
+        this.update(this.state.data, dataItem, true);
+        // this.update(data, dataItem, true);
+
+        this.setState({
+            data: this.state.data.slice()
+        });
+
+        Socket.emit(
+            "repair:delete",
+            JSON.stringify({
+                id: dataItem.id
+            }),
+            this.callbackDelete
         );
     }
     onPageChange(e) {
@@ -577,6 +602,10 @@ class Repair extends React.Component {
                             Add New
                         </button>
                     </GridToolbar> */}
+                     <Column width="120px" 
+                        title="Remove"
+                        cell={cellWithEditing(this.remove)}
+                    />
                     <Column field="requestId" title="ID" width="150px" />
                     <Column
                         field="providerId"
@@ -600,10 +629,7 @@ class Repair extends React.Component {
                     <Column field="latitude" title="Latitude" width="200px" />
                     <Column field="longitude" title="Longitude" width="200px" />
 
-                    {/* <Column
-                        title="Edit"
-                        cell={cellWithEditing(this.edit, this.remove)}
-                    /> */}
+                   
                 </Grid>
                 {this.state.productInEdit && (
                     <Dialog
