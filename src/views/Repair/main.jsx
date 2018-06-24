@@ -5,6 +5,8 @@ import { Card, CardBody, CardHeader, Col, Collapse, Fade } from 'reactstrap';
 // import cellWithEditing from './cellWithEditing.jsx';
 import Socket from '../../socket';
 import Dialog from './dialog.jsx';
+import DetailComponent from "./DetailComponent";
+
 
 class Repair extends React.Component {
     constructor(props) {
@@ -20,6 +22,7 @@ class Repair extends React.Component {
         // bind state to callback events which will be
         // triggered when the server response fetched
         this.callbackRead = this.callbackRead.bind(this);
+        this.expandChange = this.expandChange.bind(this);
         // emit repair read request via socket.io, and
         // set the callback func to process the response
         Socket.emit(
@@ -551,6 +554,9 @@ class Repair extends React.Component {
                 <Grid
                     data={this.state.data}
                     style={{ maxHeight: '750px' }}
+                    detail={DetailComponent}
+                    expandField="expanded"
+                    expandChange={this.expandChange}
                     skip={this.state.skip}
                     total={this.state.total}
                     pageable={this.state.pagerState}

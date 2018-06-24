@@ -21,7 +21,7 @@ import Dialog from "./dialog.jsx";
 // import { Dialog } from '@progress/kendo-dialog-react-wrapper';
 
 
-import { sampleProducts } from "./sample-products.jsx";
+import { sampleProdMozhganucts } from "./sample-products.jsx";
 import cellWithEditing from "./cellWithEditing.jsx";
 import Socket from "../../socket";
 import AvatarCell from "./AvatarCell";

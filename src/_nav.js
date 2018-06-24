@@ -31,7 +31,7 @@ export default {
         },
         {
             name: "Providers",
-            url: "/Provider",
+            url: "/provider",
             icon: "icon-grid",
             badge: {
                 variant: "info",
