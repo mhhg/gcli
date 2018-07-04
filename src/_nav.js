@@ -20,6 +20,15 @@ export default {
             }
         },
         {
+            name: "Client",
+            url: "/client",
+            icon: "icon-user",
+            badge: {
+                variant: "info",
+                text: ""
+            }
+        },
+        {
             title: true,
             name: "Provider",
             wrapper: {

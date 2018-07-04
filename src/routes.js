@@ -37,11 +37,17 @@ const repair = Loadable({
     loading: Loading
 });
 
+const client = Loadable({
+    loader: () => import("./views/client/client-file"),
+    loading: Loading
+});
+
 const routes = [
     { path: "/", exact: true, name: "Home", component: DefaultLayout },
     { path: "/login", exact: true, name: "Login", component: Login },
     { path: "/user", name: "User", component: Users },
     // { path: "/provider", name: "Provider", component: Providers },
+    { path: "/client", name: "Client", component: client },
     { path: "/map", name: "Map", component: Map },
     { path: "/Provider", name: "Provider", component: External },
     { path: "/repair", name: "Repair", component: repair }

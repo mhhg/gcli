@@ -21,13 +21,15 @@ import Dialog from "./dialog.jsx";
 // import { Dialog } from '@progress/kendo-dialog-react-wrapper';
 
 
-import { sampleProdMozhganucts } from "./sample-products.jsx";
+// import { sampleProdMozhganucts } from "./sample-products.jsx";
 import cellWithEditing from "./cellWithEditing.jsx";
 import Socket from "../../socket";
 import AvatarCell from "./AvatarCell";
-import DetailComponent from "./DetailComponent";
+import CheckBox from "./Checked";
+import cellWithCheckBox from "./cellWithCheckBox";
 
-class MozhganGrid extends React.Component {
+
+class client extends React.Component {
     constructor(props) {
         super(props);
 
@@ -45,7 +47,7 @@ class MozhganGrid extends React.Component {
         this.expandChange = this.expandChange.bind(this);
         
         Socket.emit(
-            "provider:read",
+            "user:read",
             JSON.stringify({
                 skip: 0,
                 limit: 40,
@@ -73,7 +75,7 @@ class MozhganGrid extends React.Component {
                 ownership: 2
             },
             sort: [],
-            products: [],
+            data: [],
             productInEdit: undefined
         };
 
@@ -112,13 +114,13 @@ class MozhganGrid extends React.Component {
          // checkout the pagesize
          let pageSize = this.state.pageSize;
          if (response.limit + response.skip < response.total) {
-             pageSize = response.providers.length;
+             pageSize = response.users.length;
          }
 
         this.setState({
             total: response.total,
             skip: response.skip,
-            products: response.providers.slice(0),
+            data : response.users.slice(0),
             pageSize: pageSize
         });
     }
@@ -132,25 +134,25 @@ class MozhganGrid extends React.Component {
     }
     callbackDelete(stringResponse) {
         console.log(
-            "[products.callbackDelete] stringResponse: ",
+            "[data.callbackDelete] stringResponse: ",
             stringResponse
         );
     }
     remove(dataItem) {
         // dataItem.inEdit = undefined;
-        console.log("[provider.remove] dataItem:", dataItem);
+        console.log("[user.remove] dataItem:", dataItem);
         alert('Confirm deleting: ' + dataItem.name);
-        const products = this.state.products.slice();
-        const index = products.findIndex(p => p.id === dataItem.id);
+        const data = this.state.data.slice();
+        const index = data.findIndex(p => p.id === dataItem.id);
         if (index !== -1) {
-            products.splice(index, 1);
+            data.splice(index, 1);
             this.setState({
-                products: products
+                data: data
             });
         }
 
         Socket.emit(
-            "provider:delete",
+            "user:delete",
             JSON.stringify({
                 id: dataItem.id
             }),
@@ -164,24 +166,24 @@ class MozhganGrid extends React.Component {
         console.log("[Grid.callbackSave] response:", response);
 
         const dataItem = this.state.productInEdit;
-        const products = this.state.products.slice();
+        const data = this.state.data.slice();
 
         if (dataItem.id === undefined) {
             // products.unshift(this.newProduct(dataItem));
             return;
         } else {
-            const index = products.findIndex(p => p.id === dataItem.id);
-            products.splice(index, 1, dataItem);
+            const index = data.findIndex(p => p.id === dataItem.id);
+            data.splice(index, 1, dataItem);
         }
 
         this.setState({
-            products: products,
+            data: data,
             productInEdit: undefined
         });
     }
     save() {
         const dataItem = this.state.productInEdit;
-        const products = this.state.products.slice();
+        const data = this.state.data.slice();
 
         const initialFilter = {
             logic: "and",
@@ -189,7 +191,7 @@ class MozhganGrid extends React.Component {
         };
 
         Socket.emit(
-            "provider:save",
+            "user:save",
             JSON.stringify(dataItem),
             this.callbackSave
         );
@@ -232,42 +234,40 @@ class MozhganGrid extends React.Component {
         } product`;
     }
 
-    cloneProduct(product) {
-        return Object.assign({}, product);
+    cloneProduct(data) {
+        return Object.assign({}, data);
     }
 
     newProduct(source) {
         const newProduct = {
             // id: this.generateId(),
+            id:"",
             imageId: "",
-            ownerId: "",
-            isConfirmed: false,
-            latitude: 0.0,
-            longitude: 0.0,
-            name: "",
-            description: "",
-            mobile: "",
-            background: "",
-            categories: [],
-            phoneNumbers: [],
-            membersCount: 0,
-            advertisement: "",
-            attachments: []
+            confirmed: false,
+            isAdmin: false,
+            firstname : "",
+            lastname: "",
+            middlename: "",
+            username: "",
+            email: "",
+            address : "",
+            gender: "",
+            nationalId: "",
         };
 
         return Object.assign(newProduct, source);
     }
 
-    generateId() {
-        let id = 1;
-        this.state.products.forEach(p => {
-            id = Math.max((p.id || 0) + 1, id);
-        });
-        return id;
-    }
+    // generateId() {
+    //     let id = 1;
+    //     this.state.products.forEach(p => {
+    //         id = Math.max((p.id || 0) + 1, id);
+    //     });
+    //     return id;
+    // }
     updateOwnerState(key, value) {
         console.log(
-            "[Provider.funcUpdateOwnershipState] key:",
+            "[User.funcUpdateOwnershipState] key:",
             key,
             "value:",
             value
@@ -280,13 +280,13 @@ class MozhganGrid extends React.Component {
         });
 
         console.log(
-            "[Provider.funcUpdateOwnershipState] after update",
+            "[User.funcUpdateOwnershipState] after update",
             "this.state.objectSearchState:",
             this.state.filter
         );
 
         Socket.emit(
-            "provider:read",
+            "user:read",
             JSON.stringify({
                 skip: 0,
                 limit: this.defaultPageSize,
@@ -299,7 +299,7 @@ class MozhganGrid extends React.Component {
     }
     onPageChange(e) {
         console.log(
-            "[Provider.eventOnPageChange] e.page.skip:",
+            "[User.eventOnPageChange] e.page.skip:",
             e.page.skip,
             "e.page.limit:",
             e.page.limit
@@ -311,7 +311,7 @@ class MozhganGrid extends React.Component {
         });
 
         Socket.emit(
-            "provider:read",
+            "user:read",
             JSON.stringify({
                 skip: e.page.skip,
                 limit: e.page.take,
@@ -324,7 +324,7 @@ class MozhganGrid extends React.Component {
     }
     updatePagerState(key, value) {
         console.log(
-            "[Provider.funcUpdatePagerState] key:",
+            "[User.funcUpdatePagerState] key:",
             key,
             "value:",
             value
@@ -360,7 +360,7 @@ class MozhganGrid extends React.Component {
         });
 
         Socket.emit(
-            "provider:read",
+            "user:read",
             JSON.stringify({
                 skip: this.state.skip,
                 limit: this.state.limit,
@@ -374,21 +374,21 @@ class MozhganGrid extends React.Component {
     }
 
     sortChange(event) {
-        console.log("[Provider.sortChange] event.sort:", event.sort);
+        console.log("[User.sortChange] event.sort:", event.sort);
 
         this.setState({
             sort: event.sort
         });
 
         console.log(
-            "[Provider.sortChange] this.state.limit:",
+            "[User.sortChange] this.state.limit:",
             this.state.limit,
             "this.state.skip:",
             this.state.skip
         );
 
         Socket.emit(
-            "provider:read",
+            "user:read",
             JSON.stringify({
                 skip: this.state.skip,
                 limit: this.state.limit,
@@ -401,10 +401,7 @@ class MozhganGrid extends React.Component {
     }
     render() {
         const grid = (
-            <Grid data={this.state.products} style={{ maxHeight: "750px" }}
-                detail={DetailComponent}
-                expandField="expanded"
-                expandChange={this.expandChange}    
+            <Grid data={this.state.data} style={{ maxHeight: "750px" }}
                 filterable={true}
                 filter={this.state.filter}
                 filterChange={this.filterChange}
@@ -434,72 +431,50 @@ class MozhganGrid extends React.Component {
                     width="169px"
                 />
                 
-                <Column field="name" title="Name" width="230px" />
-                <Column field="description" title="Description" />
-                <Column field="address" title="Address"/>
+                <Column field="id" title="ID" editable={false} width="150px" />
                 <Column
                     field="imageId"
                     title="Image"
                     editable={false}
                     sortable={false}
                     filterable={false}
+                    width="73px"
                     cell={AvatarCell}
-                    width="90px"
                 />
+                <Column field="username" title="Username" width="200px" />
+                <Column field="firstname" title="FirstName" width="200px" />
+                <Column field="lastname" title="LastName" width="200px" />
                 <Column
-                    field="isConfirmed"
-                    title="IsConfirmed"
+                    field="confirmed"
+                    title="Confirmed"
+                    width="200px"
                     editor="boolean"
                     filter="boolean"
-                    width="150px"
+                    cell={cellWithCheckBox("confirmed")}
                 />
                 <Column
-                    field="categories"
-                    title="Categories"
-                    editable={false}
-                    sortable={false}
-                    // filterable={false}
-                    
+                    field="isAdmin"
+                    title="IsAdmin"
+                    width="200px"
+                    editor="boolean"
+                    filter="boolean"
+                    cell={cellWithCheckBox("isAdmin")}
+                />
+                <Column
+                    field="gender"
+                    title="Gender"
                     width="200px"
                 />
+                <Column field="nationalId" title="NationalID" width="200px" />
+                <Column field="middlename" title="Middlename" width="200px" />
                 <Column
-                    field="phoneNumbers"
-                    title="PhoneNumbers"
-                    editable={false}
+                    field="email"
+                    title="Email"
                     width="200px"
+                    editor={"email"}
                 />
-                <Column field="mobile" title="Mobile" width="200px" />
-                <Column
-                    field="membersCount"
-                    title="Members No"
-                    editable={false}
-                    width="200px"
-                />
-                <Column
-                    field="background"
-                    title="Background"
-                    editable={false}
-                    sortable={false}
-                    // filterable={false}
-                    width="200px"
-                />
-                <Column
-                    field="latitude"
-                    title="Latitude"
-                    sortable={false}
-                    editable={false}
-                    filter="numeric"
-                    width="160px"
-                />
-                <Column
-                    field="longitude"
-                    title="Longitude"
-                    sortable={false}
-                    editable={false}
-                    filter="numeric"
-                    width="160px"
-                />
-                <Column field="id" title="ID" width="230px" />
+                <Column field="address" title="Address" width="200px" />
+                <Column field="id" title="ID" editable={false} width="150px" />
             </Grid>
         );
 
@@ -513,12 +488,12 @@ class MozhganGrid extends React.Component {
                 <form className="row k-form" onSubmit={this.handleSubmit}>
                     <div style={{ marginBottom: "1rem" }} className="col-md-6">
                         <label>
-                            Name<br />
+                        Username<br />
                             <Input
                                 className="form-control"
                                 type="text"
-                                name="name"
-                                value={this.state.productInEdit.name || ""}
+                                name="username"
+                                value={this.state.productInEdit.username || ""}
                                 onChange={this.onDialogInputChange}
                             />
                         </label>
@@ -526,13 +501,13 @@ class MozhganGrid extends React.Component {
                     
                     <div style={{ marginBottom: "1rem" }} className="col-md-6">
                         <label>
-                            categories<br />
+                        firstname<br />
                             <Input
                                 className="form-control"
                                 type="text"
-                                name="categories"
+                                name="firstname"
                                 value={
-                                    this.state.productInEdit.categories || ""
+                                    this.state.productInEdit.firstname || ""
                                 }
                                 onChange={this.onDialogInputChange}
                             />
@@ -540,78 +515,14 @@ class MozhganGrid extends React.Component {
                     </div>
                     <div style={{ marginBottom: "1rem" }} className="col-md-6">
                         <label>
-                            Description<br />
+                        lastname<br />
                             <Input
                                 className="form-control"
                                 type="text"
-                                name="description"
+                                name="lastname"
                                 value={
-                                    this.state.productInEdit.description || ""
+                                    this.state.productInEdit.lastname || ""
                                 }
-                                onChange={this.onDialogInputChange}
-                            />
-                        </label>
-                    </div>
-                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
-                        <label>
-                            phoneNumbers<br />
-                            <Input
-                                className="form-control"
-                                type="text"
-                                name="phoneNumbers"
-                                value={
-                                    this.state.productInEdit.phoneNumbers || ""
-                                }
-                                onChange={this.onDialogInputChange}
-                            />
-                        </label>
-                    </div>
-                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
-                        <label>
-                            mobile<br />
-                            <Input
-                                className="form-control"
-                                type="text"
-                                name="mobile"
-                                value={this.state.productInEdit.mobile || ""}
-                                onChange={this.onDialogInputChange}
-                            />
-                        </label>
-                    </div>
-                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
-                        <label>
-                            background<br />
-                            <Input
-                                className="form-control"
-                                type="text"
-                                name="background"
-                                value={
-                                    this.state.productInEdit.background || ""
-                                }
-                                onChange={this.onDialogInputChange}
-                            />
-                        </label>
-                    </div>
-                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
-                        <label>
-                            latitude<br />
-                            <Input
-                                className="form-control"
-                                type="text"
-                                name="latitude"
-                                value={this.state.productInEdit.latitude || ""}
-                                onChange={this.onDialogInputChange}
-                            />
-                        </label>
-                    </div>
-                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
-                        <label>
-                            longitude<br />
-                            <Input
-                                className="form-control"
-                                type="text"
-                                name="longitude"
-                                value={this.state.productInEdit.longitude || ""}
                                 onChange={this.onDialogInputChange}
                             />
                         </label>
@@ -625,14 +536,96 @@ class MozhganGrid extends React.Component {
                             id="ch1"
                             className="k-checkbox form-control"
                             type="checkbox"
-                            name="isConfirmed"
-                            checked={this.state.productInEdit.isConfirmed || ""}
+                            name="confirmed"
+                            checked={this.state.productInEdit.confirmed || ""}
                             onChange={this.onDialogInputChange}
                         />
                         <label className="k-checkbox-label" htmlFor="ch1">
-                            IsConfirmed<br />
+                        confirmed<br />
                         </label>
                     </div>
+                    <div
+                        className="col-md-6"
+                        className="k-form-field"
+                        style={{ marginBottom: "1rem" }}
+                    >
+                        <input
+                            id="ch2"
+                            className="k-checkbox form-control"
+                            type="checkbox"
+                            name="isAdmin"
+                            checked={this.state.productInEdit.isAdmin || ""}
+                            onChange={this.onDialogInputChange}
+                        />
+                        <label className="k-checkbox-label" htmlFor="ch2">
+                        isAdmin<br />
+                        </label>
+                    </div>
+                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
+                        <label>
+                        gender<br />
+                            <Input
+                                className="form-control"
+                                type="text"
+                                name="gender"
+                                value={
+                                    this.state.productInEdit.gender || ""
+                                }
+                                onChange={this.onDialogInputChange}
+                            />
+                        </label>
+                    </div>
+                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
+                        <label>
+                        nationalId<br />
+                            <Input
+                                className="form-control"
+                                type="text"
+                                name="nationalId"
+                                value={this.state.productInEdit.nationalId || ""}
+                                onChange={this.onDialogInputChange}
+                            />
+                        </label>
+                    </div>
+                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
+                        <label>
+                        middlename<br />
+                            <Input
+                                className="form-control"
+                                type="text"
+                                name="middlename"
+                                value={
+                                    this.state.productInEdit.middlename || ""
+                                }
+                                onChange={this.onDialogInputChange}
+                            />
+                        </label>
+                    </div>
+                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
+                        <label>
+                        email<br />
+                            <Input
+                                className="form-control"
+                                type="text"
+                                name="email"
+                                value={this.state.productInEdit.email || ""}
+                                onChange={this.onDialogInputChange}
+                            />
+                        </label>
+                    </div>
+                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
+                        <label>
+                        address<br />
+                            <Input
+                                className="form-control"
+                                type="text"
+                                name="address"
+                                value={this.state.productInEdit.address || ""}
+                                onChange={this.onDialogInputChange}
+                            />
+                        </label>
+                    </div>
+
                 </form>
             </Dialog>
         );
@@ -882,7 +875,7 @@ class MozhganGrid extends React.Component {
 
         const cardHeader = (
             <CardHeader>
-                Providers Grid State Form
+                Users Grid State Form
                 <div className="card-header-actions">
                     <a
                         className="card-header-action btn btn-minimize"
@@ -945,7 +938,7 @@ class MozhganGrid extends React.Component {
     }
 }
 
-export default MozhganGrid;
+export default client;
 // ReactDOM.render(
 //     <App />,
 //     document.querySelector('my-app')
