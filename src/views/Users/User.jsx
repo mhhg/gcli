@@ -1,41 +1,17 @@
+import { Grid, GridColumn as Column, GridToolbar } from "@progress/kendo-react-grid";
+import { Input } from "@progress/kendo-react-inputs";
 import React from "react";
-import ReactDOM from "react-dom";
-import {
-    Grid,
-    GridColumn as Column,
-    GridToolbar
-} from "@progress/kendo-react-grid";
-import { 
-    Badge,
-    Card,
-    CardBody,
-    CardFooter,
-    CardHeader,
-    Col,
-    Row,
-    Collapse,
-    Fade 
-} from "reactstrap";
-import { Input, NumericTextBox } from "@progress/kendo-react-inputs";
-import Dialog from "./dialog.jsx";
-// import { Dialog } from '@progress/kendo-dialog-react-wrapper';
-
-
-import { sampleProdMozhganucts } from "./sample-products.jsx";
-import cellWithEditing from "./cellWithEditing.jsx";
+import { Card, CardBody, CardHeader, Col, Collapse, Fade, Row } from "reactstrap";
 import Socket from "../../socket";
 import AvatarCell from "./AvatarCell";
-import DetailComponent from "./DetailComponent";
+import cellWithCheckBox from "./CellWithCheckBox";
+import cellWithEditing from "./CellWithEditing";
+import Dialog from "./Dialog";
 
-class MozhganGrid extends React.Component {
+class User extends React.Component {
     constructor(props) {
         super(props);
-
-        // set initial filter state
-        const initialFilter = {
-            logic: "and",
-            filters: []
-        };
+        const initialFilter = { logic: "and", filters: [] };
         // bind state to callback events which will be
         // triggered when the server response fetched
         this.callbackRead = this.callbackRead.bind(this);
@@ -43,41 +19,6 @@ class MozhganGrid extends React.Component {
         this.callbackDelete = this.callbackDelete.bind(this);
         this.updateOwnerState = this.updateOwnerState.bind(this);
         this.expandChange = this.expandChange.bind(this);
-        
-        Socket.emit(
-            "provider:read",
-            JSON.stringify({
-                skip: 0,
-                limit: 40,
-                search: {
-                    ownership: 2
-                },
-                filter: initialFilter,
-                sort: []
-            }),
-            this.callbackRead
-        );
-        this.state = {
-            allowUnsort: true,
-            multiple: false,
-            pagerState: {
-                info: true,
-                type: "numeric",
-                pageSizes: [5, 10, 25, 50, 75, 100],
-                previousNext: true,
-                pageSize: this.defaultPageSize,
-                buttonCount: this.defaultButtonCount
-            },
-            filter: initialFilter,
-            search:{
-                ownership: 2
-            },
-            sort: [],
-            products: [],
-            productInEdit: undefined
-        };
-
-        
         this.edit = this.edit.bind(this);
         this.save = this.save.bind(this);
         this.remove = this.remove.bind(this);
@@ -85,22 +26,32 @@ class MozhganGrid extends React.Component {
         this.insert = this.insert.bind(this);
         this.onDialogInputChange = this.onDialogInputChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
-
-        // bind events to state
-        this.filterChange = this.filterChange.bind(this);
+        this.filterChange = this.filterChange.bind(this); // bind events to state
         this.sortChange = this.sortChange.bind(this);
-
-        // UI related only
-        this.toggle = this.toggle.bind(this);
+        this.toggle = this.toggle.bind(this); // UI related only
         this.toggleFade = this.toggleFade.bind(this);
-        
+        Socket.emit("user:read", JSON.stringify({
+            skip: 0, limit: 40, search: { ownership: 2 },
+            filter: initialFilter, sort: []
+        }), this.callbackRead);
+        this.state = {
+            allowUnsort: true, multiple: false,
+            pagerState: {
+                info: true, type: "numeric",
+                pageSizes: [5, 10, 25, 50, 75, 100],
+                previousNext: true,
+                pageSize: this.defaultPageSize,
+                buttonCount: this.defaultButtonCount
+            },
+            filter: initialFilter,
+            search: { ownership: 2 },
+            sort: [], data: [],
+            docInEdit: undefined
+        };
     }
-
     callbackRead(stringResponse) {
-        // parse the response
-        const response = JSON.parse(stringResponse);
+        const response = JSON.parse(stringResponse); // parse the response
         console.log("[MozhganGrid.callbackRead] response:", response);
-
         if (response === null) {
             return;
             // TODO: handle this issue by a timeout and
@@ -108,232 +59,133 @@ class MozhganGrid extends React.Component {
         } else if (response.code !== 200) {
             return;
         }
-
-         // checkout the pagesize
-         let pageSize = this.state.pageSize;
-         if (response.limit + response.skip < response.total) {
-             pageSize = response.providers.length;
-         }
-
+        // checkout the pagesize
+        let pageSize = this.state.pageSize;
+        if (response.limit + response.skip < response.total) {
+            pageSize = response.users.length;
+        }
         this.setState({
-            total: response.total,
-            skip: response.skip,
-            products: response.providers.slice(0),
-            pageSize: pageSize
+            total: response.total, skip: response.skip,
+            data: response.users.slice(0), pageSize: pageSize
         });
     }
-    
+    callbackDelete(stringResponse) {
+        console.log("[data.callbackDelete] stringResponse: ", stringResponse);
+    }
     handleSubmit(event) {
         event.preventDefault();
     }
-
     edit(dataItem) {
-        this.setState({ productInEdit: this.cloneProduct(dataItem) });
-    }
-    callbackDelete(stringResponse) {
-        console.log(
-            "[products.callbackDelete] stringResponse: ",
-            stringResponse
-        );
+        this.setState({ docInEdit: this.cloneUser(dataItem) });
     }
     remove(dataItem) {
         // dataItem.inEdit = undefined;
-        console.log("[provider.remove] dataItem:", dataItem);
+        console.log("[user.remove] dataItem:", dataItem);
         alert('Confirm deleting: ' + dataItem.name);
-        const products = this.state.products.slice();
-        const index = products.findIndex(p => p.id === dataItem.id);
+        const data = this.state.data.slice();
+        const index = data.findIndex(p => p.id === dataItem.id);
         if (index !== -1) {
-            products.splice(index, 1);
+            data.splice(index, 1);
             this.setState({
-                products: products
+                data: data
             });
         }
 
         Socket.emit(
-            "provider:delete",
+            "user:delete",
             JSON.stringify({
                 id: dataItem.id
             }),
             this.callbackDelete
         );
-
     }
-
     callbackSave(stringResponse) {
         let response = JSON.parse(stringResponse);
         console.log("[Grid.callbackSave] response:", response);
-
-        const dataItem = this.state.productInEdit;
-        const products = this.state.products.slice();
-
+        const dataItem = this.state.docInEdit;
+        const data = this.state.data.slice();
         if (dataItem.id === undefined) {
-            // products.unshift(this.newProduct(dataItem));
+            // products.unshift(this.newDoc(dataItem));
             return;
         } else {
-            const index = products.findIndex(p => p.id === dataItem.id);
-            products.splice(index, 1, dataItem);
+            const index = data.findIndex(p => p.id === dataItem.id);
+            data.splice(index, 1, dataItem);
         }
-
         this.setState({
-            products: products,
-            productInEdit: undefined
+            data: data,
+            docInEdit: undefined
         });
     }
     save() {
-        const dataItem = this.state.productInEdit;
-        const products = this.state.products.slice();
-
-        const initialFilter = {
-            logic: "and",
-            filters: []
-        };
-
-        Socket.emit(
-            "provider:save",
-            JSON.stringify(dataItem),
-            this.callbackSave
-        );
+        const dataItem = this.state.docInEdit;
+        Socket.emit("user:save", JSON.stringify(dataItem), this.callbackSave);
     }
-
     cancel() {
-        this.setState({ productInEdit: undefined });
+        this.setState({ docInEdit: undefined });
     }
-
     insert() {
-        this.setState({ productInEdit: {} });
+        this.setState({ docInEdit: {} });
     }
-
     onDialogInputChange(event) {
         const target = event.target;
-        const value =
-            target.type === "checkbox" ? target.checked : target.value;
+        const value = target.type === "checkbox" ? target.checked : target.value;
         const name = target.props ? target.props.name : target.name;
-
-        const edited = this.cloneProduct(this.state.productInEdit);
+        const edited = this.cloneUser(this.state.docInEdit);
         edited[name] = value;
-
-        console.log(
-            "[Grid.onDialogInputChange] edited:",
-            edited,
-            "name:",
-            name,
-            "value:",
-            value
-        );
-
-        this.setState({
-            productInEdit: edited
-        });
+        console.log("[Grid.onDialogInputChange] edited:", edited, "name:", name, "value:", value);
+        this.setState({ docInEdit: edited });
     }
-
     dialogTitle() {
         return `${
-            this.state.productInEdit.id === undefined ? "Add" : "Edit"
-        } product`;
+            this.state.docInEdit.id === undefined ? "Add" : "Edit"
+            } User`;
     }
-
-    cloneProduct(product) {
-        return Object.assign({}, product);
+    cloneUser(data) {
+        return Object.assign({}, data);
     }
-
-    newProduct(source) {
-        const newProduct = {
-            // id: this.generateId(),
-            imageId: "",
-            ownerId: "",
-            isConfirmed: false,
-            latitude: 0.0,
-            longitude: 0.0,
-            name: "",
-            description: "",
-            mobile: "",
-            background: "",
-            categories: [],
-            phoneNumbers: [],
-            membersCount: 0,
-            advertisement: "",
-            attachments: []
+    newDoc(source) {
+        const newDoc = {
+            imageId: "", confirmed: false,
+            isAdmin: false, firstname: "",
+            lastname: "", middlename: "",
+            username: "", email: "",
+            address: "", gender: "",
+            nationalId: "",
         };
-
-        return Object.assign(newProduct, source);
+        return Object.assign(newDoc, source);
     }
-
-    generateId() {
-        let id = 1;
-        this.state.products.forEach(p => {
-            id = Math.max((p.id || 0) + 1, id);
-        });
-        return id;
-    }
+    // generateId() {
+    //     let id = 1;
+    //     this.state.products.forEach(p => {
+    //         id = Math.max((p.id || 0) + 1, id);
+    //     });
+    //     return id;
+    // }
     updateOwnerState(key, value) {
-        console.log(
-            "[Provider.funcUpdateOwnershipState] key:",
-            key,
-            "value:",
-            value
-        );
-
+        console.log("[User.funcUpdateOwnershipState] key:", key, "value:", value);
         this.setState({
             search: Object.assign(this.state.search, {
                 ownership: parseInt(value, 10)
             })
         });
-
-        console.log(
-            "[Provider.funcUpdateOwnershipState] after update",
-            "this.state.objectSearchState:",
-            this.state.filter
-        );
-
-        Socket.emit(
-            "provider:read",
-            JSON.stringify({
-                skip: 0,
-                limit: this.defaultPageSize,
-                search: this.state.search,
-                filter: this.state.filter,
-                sort: this.state.sort
-            }),
-            this.callbackRead
-        );
+        console.log("[User.funcUpdateOwnershipState] after update", "this.state.objectSearchState:", this.state.filter);
+        Socket.emit("user:read", JSON.stringify({
+            skip: 0, limit: this.defaultPageSize,
+            search: this.state.search, filter: this.state.filter,
+            sort: this.state.sort
+        }), this.callbackRead);
     }
     onPageChange(e) {
-        console.log(
-            "[Provider.eventOnPageChange] e.page.skip:",
-            e.page.skip,
-            "e.page.limit:",
-            e.page.limit
-        );
-
-        this.setState({
-            skip: e.page.skip,
-            limit: e.page.take
-        });
-
-        Socket.emit(
-            "provider:read",
-            JSON.stringify({
-                skip: e.page.skip,
-                limit: e.page.take,
-                search: this.state.search,
-                filter: this.state.filter,
-                sort: this.state.sort
-            }),
-            this.callbackRead
-        );
+        console.log("[User.eventOnPageChange] e.page.skip:", e.page.skip, "e.page.limit:", e.page.limit);
+        this.setState({ skip: e.page.skip, limit: e.page.take });
+        Socket.emit("user:read", JSON.stringify({
+            skip: e.page.skip, limit: e.page.take, search: this.state.search,
+            filter: this.state.filter, sort: this.state.sort
+        }), this.callbackRead);
     }
     updatePagerState(key, value) {
-        console.log(
-            "[Provider.funcUpdatePagerState] key:",
-            key,
-            "value:",
-            value
-        );
-
-        const newPagerState = Object.assign({}, this.state.pagerState, {
-            [key]: value
-        });
-
+        console.log("[User.funcUpdatePagerState] key:", key, "value:", value);
+        const newPagerState = Object.assign({}, this.state.pagerState, { [key]: value });
         this.setState(
             Object.assign({}, this.state, {
                 pagerState: newPagerState
@@ -343,68 +195,35 @@ class MozhganGrid extends React.Component {
     toggle() {
         this.setState({ collapse: !this.state.collapse });
     }
-
     toggleFade() {
         this.setState({ fadeIn: !this.state.fadeIn });
     }
-
     expandChange(event) {
         console.log("[expandChange] event:", event);
-
         event.dataItem.expanded = !event.dataItem.expanded;
         this.forceUpdate();
     }
     filterChange(event) {
-        this.setState({
-            filter: event.filter
-        });
-
-        Socket.emit(
-            "provider:read",
-            JSON.stringify({
-                skip: this.state.skip,
-                limit: this.state.limit,
-                search: this.state.search,
-                filter: event.filter,
-                sort: this.state.sort 
-            }),
-            this.callbackRead
-        );
-
+        this.setState({ filter: event.filter });
+        Socket.emit("user:read", JSON.stringify({
+            skip: this.state.skip, limit: this.state.limit,
+            search: this.state.search, filter: event.filter,
+            sort: this.state.sort
+        }), this.callbackRead);
     }
-
     sortChange(event) {
-        console.log("[Provider.sortChange] event.sort:", event.sort);
-
-        this.setState({
+        console.log("[User.sortChange] event.sort:", event.sort);
+        this.setState({ sort: event.sort });
+        console.log("[User.sortChange] this.state.limit:", this.state.limit, "this.state.skip:", this.state.skip);
+        Socket.emit("user:read", JSON.stringify({
+            skip: this.state.skip, limit: this.state.limit,
+            search: this.state.search, filter: this.state.filter,
             sort: event.sort
-        });
-
-        console.log(
-            "[Provider.sortChange] this.state.limit:",
-            this.state.limit,
-            "this.state.skip:",
-            this.state.skip
-        );
-
-        Socket.emit(
-            "provider:read",
-            JSON.stringify({
-                skip: this.state.skip,
-                limit: this.state.limit,
-                search: this.state.search,
-                filter: this.state.filter,
-                sort: event.sort
-            }),
-            this.callbackRead
-        );
+        }), this.callbackRead);
     }
     render() {
         const grid = (
-            <Grid data={this.state.products} style={{ maxHeight: "750px" }}
-                detail={DetailComponent}
-                expandField="expanded"
-                expandChange={this.expandChange}    
+            <Grid data={this.state.data} style={{ maxHeight: "750px" }}
                 filterable={true}
                 filter={this.state.filter}
                 filterChange={this.filterChange}
@@ -419,91 +238,59 @@ class MozhganGrid extends React.Component {
                     allowUnsort: this.state.allowUnsort,
                     mode: this.state.multiple ? "multiple" : "single"
                 }}
-                >
+            >
                 <GridToolbar>
                     <button onClick={this.insert} className="k-button">
                         Add New
                     </button>
                 </GridToolbar>
-                <Column
-                    title=""
-                    editable={false}
-                    sortable={false}
-                    filterable={false}
+                <Column title="" editable={false}
+                    sortable={false} filterable={false}
                     cell={cellWithEditing(this.edit, this.remove)}
                     width="169px"
                 />
-                
-                <Column field="name" title="Name" width="230px" />
-                <Column field="description" title="Description" />
-                <Column field="address" title="Address"/>
-                <Column
-                    field="imageId"
-                    title="Image"
-                    editable={false}
-                    sortable={false}
-                    filterable={false}
-                    cell={AvatarCell}
-                    width="90px"
+                <Column field="id" title="ID" editable={false} width="150px" />
+                <Column field="imageId" title="Image" editable={false}
+                    sortable={false} filterable={false}
+                    width="73px" cell={AvatarCell}
                 />
+                <Column field="username" title="Username" width="200px" />
+                <Column field="firstname" title="FirstName" width="200px" />
+                <Column field="lastname" title="LastName" width="200px" />
                 <Column
-                    field="isConfirmed"
-                    title="IsConfirmed"
+                    field="confirmed"
+                    title="Confirmed"
+                    width="200px"
                     editor="boolean"
                     filter="boolean"
-                    width="150px"
+                    cell={cellWithCheckBox("confirmed")}
                 />
                 <Column
-                    field="categories"
-                    title="Categories"
-                    editable={false}
-                    sortable={false}
-                    // filterable={false}
-                    
+                    field="isAdmin"
+                    title="IsAdmin"
+                    width="200px"
+                    editor="boolean"
+                    filter="boolean"
+                    cell={cellWithCheckBox("isAdmin")}
+                />
+                <Column
+                    field="gender"
+                    title="Gender"
                     width="200px"
                 />
+                <Column field="nationalId" title="NationalID" width="200px" />
+                <Column field="middlename" title="Middlename" width="200px" />
                 <Column
-                    field="phoneNumbers"
-                    title="PhoneNumbers"
-                    editable={false}
+                    field="email"
+                    title="Email"
                     width="200px"
+                    editor={"email"}
                 />
-                <Column field="mobile" title="Mobile" width="200px" />
-                <Column
-                    field="membersCount"
-                    title="Members No"
-                    editable={false}
-                    width="200px"
-                />
-                <Column
-                    field="background"
-                    title="Background"
-                    editable={false}
-                    sortable={false}
-                    // filterable={false}
-                    width="200px"
-                />
-                <Column
-                    field="latitude"
-                    title="Latitude"
-                    sortable={false}
-                    editable={false}
-                    filter="numeric"
-                    width="160px"
-                />
-                <Column
-                    field="longitude"
-                    title="Longitude"
-                    sortable={false}
-                    editable={false}
-                    filter="numeric"
-                    width="160px"
-                />
-                <Column field="id" title="ID" width="230px" />
+                <Column field="address" title="Address" width="200px" />
+                <Column field="id" title="ID" editable={false} width="150px" />
             </Grid>
         );
-
-        const dialog = this.state.productInEdit && (
+        const dialog = this.state.docInEdit && (
             <Dialog
                 title={this.dialogTitle()}
                 close={this.cancel}
@@ -513,26 +300,25 @@ class MozhganGrid extends React.Component {
                 <form className="row k-form" onSubmit={this.handleSubmit}>
                     <div style={{ marginBottom: "1rem" }} className="col-md-6">
                         <label>
-                            Name<br />
+                            Username<br />
                             <Input
                                 className="form-control"
                                 type="text"
-                                name="name"
-                                value={this.state.productInEdit.name || ""}
+                                name="username"
+                                value={this.state.docInEdit.username || ""}
                                 onChange={this.onDialogInputChange}
                             />
                         </label>
                     </div>
-                    
                     <div style={{ marginBottom: "1rem" }} className="col-md-6">
                         <label>
-                            categories<br />
+                            firstname<br />
                             <Input
                                 className="form-control"
                                 type="text"
-                                name="categories"
+                                name="firstname"
                                 value={
-                                    this.state.productInEdit.categories || ""
+                                    this.state.docInEdit.firstname || ""
                                 }
                                 onChange={this.onDialogInputChange}
                             />
@@ -540,103 +326,112 @@ class MozhganGrid extends React.Component {
                     </div>
                     <div style={{ marginBottom: "1rem" }} className="col-md-6">
                         <label>
-                            Description<br />
+                            lastname<br />
                             <Input
                                 className="form-control"
                                 type="text"
-                                name="description"
+                                name="lastname"
                                 value={
-                                    this.state.productInEdit.description || ""
+                                    this.state.docInEdit.lastname || ""
                                 }
                                 onChange={this.onDialogInputChange}
                             />
                         </label>
                     </div>
-                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
-                        <label>
-                            phoneNumbers<br />
-                            <Input
-                                className="form-control"
-                                type="text"
-                                name="phoneNumbers"
-                                value={
-                                    this.state.productInEdit.phoneNumbers || ""
-                                }
-                                onChange={this.onDialogInputChange}
-                            />
-                        </label>
-                    </div>
-                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
-                        <label>
-                            mobile<br />
-                            <Input
-                                className="form-control"
-                                type="text"
-                                name="mobile"
-                                value={this.state.productInEdit.mobile || ""}
-                                onChange={this.onDialogInputChange}
-                            />
-                        </label>
-                    </div>
-                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
-                        <label>
-                            background<br />
-                            <Input
-                                className="form-control"
-                                type="text"
-                                name="background"
-                                value={
-                                    this.state.productInEdit.background || ""
-                                }
-                                onChange={this.onDialogInputChange}
-                            />
-                        </label>
-                    </div>
-                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
-                        <label>
-                            latitude<br />
-                            <Input
-                                className="form-control"
-                                type="text"
-                                name="latitude"
-                                value={this.state.productInEdit.latitude || ""}
-                                onChange={this.onDialogInputChange}
-                            />
-                        </label>
-                    </div>
-                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
-                        <label>
-                            longitude<br />
-                            <Input
-                                className="form-control"
-                                type="text"
-                                name="longitude"
-                                value={this.state.productInEdit.longitude || ""}
-                                onChange={this.onDialogInputChange}
-                            />
-                        </label>
-                    </div>
-                    <div
-                        className="col-md-6"
-                        className="k-form-field"
-                        style={{ marginBottom: "1rem" }}
-                    >
+                    <div className="col-md-6 k-form-field" style={{ marginBottom: "1rem" }}>
                         <input
                             id="ch1"
                             className="k-checkbox form-control"
                             type="checkbox"
-                            name="isConfirmed"
-                            checked={this.state.productInEdit.isConfirmed || ""}
+                            name="confirmed"
+                            checked={this.state.docInEdit.confirmed || ""}
                             onChange={this.onDialogInputChange}
                         />
                         <label className="k-checkbox-label" htmlFor="ch1">
-                            IsConfirmed<br />
+                            confirmed<br />
                         </label>
                     </div>
+                    <div className="col-md-6 k-form-field" style={{ marginBottom: "1rem" }}>
+                        <input
+                            id="ch2"
+                            className="k-checkbox form-control"
+                            type="checkbox"
+                            name="isAdmin"
+                            checked={this.state.docInEdit.isAdmin || ""}
+                            onChange={this.onDialogInputChange}
+                        />
+                        <label className="k-checkbox-label" htmlFor="ch2">
+                            isAdmin<br />
+                        </label>
+                    </div>
+                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
+                        <label>
+                            gender<br />
+                            <Input
+                                className="form-control"
+                                type="text"
+                                name="gender"
+                                value={
+                                    this.state.docInEdit.gender || ""
+                                }
+                                onChange={this.onDialogInputChange}
+                            />
+                        </label>
+                    </div>
+                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
+                        <label>
+                            nationalId<br />
+                            <Input
+                                className="form-control"
+                                type="text"
+                                name="nationalId"
+                                value={this.state.docInEdit.nationalId || ""}
+                                onChange={this.onDialogInputChange}
+                            />
+                        </label>
+                    </div>
+                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
+                        <label>
+                            middlename<br />
+                            <Input
+                                className="form-control"
+                                type="text"
+                                name="middlename"
+                                value={
+                                    this.state.docInEdit.middlename || ""
+                                }
+                                onChange={this.onDialogInputChange}
+                            />
+                        </label>
+                    </div>
+                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
+                        <label>
+                            email<br />
+                            <Input
+                                className="form-control"
+                                type="text"
+                                name="email"
+                                value={this.state.docInEdit.email || ""}
+                                onChange={this.onDialogInputChange}
+                            />
+                        </label>
+                    </div>
+                    <div style={{ marginBottom: "1rem" }} className="col-md-6">
+                        <label>
+                            address<br />
+                            <Input
+                                className="form-control"
+                                type="text"
+                                name="address"
+                                value={this.state.docInEdit.address || ""}
+                                onChange={this.onDialogInputChange}
+                            />
+                        </label>
+                    </div>
+
                 </form>
             </Dialog>
         );
-
         const ownershipState = (
             <dl>
                 <dt>Ownership status filter:</dt>
@@ -660,7 +455,7 @@ class MozhganGrid extends React.Component {
                         htmlFor="ownershipTemplate"
                     >
                         Template (Excel)&nbsp;
-                    </label> 
+                    </label>
                     <input
                         defaultChecked={true}
                         type="radio"
@@ -704,7 +499,6 @@ class MozhganGrid extends React.Component {
                     </label>
                 </dd>
             </dl>
-
         );
         const filterState = (
             <dl>
@@ -753,7 +547,6 @@ class MozhganGrid extends React.Component {
                 </dd>
             </dl>
         );
-
         const pagerTypeState = (
             <dl>
                 <dt>Pager type:</dt>
@@ -802,7 +595,6 @@ class MozhganGrid extends React.Component {
                 </dd>
             </dl>
         );
-
         const infoState = (
             <dl>
                 <dd>
@@ -860,7 +652,6 @@ class MozhganGrid extends React.Component {
                 </dd>
             </dl>
         );
-
         const buttonsState = (
             <dl>
                 <dt>Max. number of buttons:</dt>
@@ -879,10 +670,9 @@ class MozhganGrid extends React.Component {
                 </dd>
             </dl>
         );
-
         const cardHeader = (
             <CardHeader>
-                Providers Grid State Form
+                Users Grid State Form
                 <div className="card-header-actions">
                     <a
                         className="card-header-action btn btn-minimize"
@@ -894,7 +684,6 @@ class MozhganGrid extends React.Component {
                 </div>
             </CardHeader>
         );
-
         const cardBody = (
             <div className="col-md-12 row">
                 <div className="col-md-3">{ownershipState}</div>
@@ -904,7 +693,6 @@ class MozhganGrid extends React.Component {
                 <div className="col-md-3">{buttonsState}</div>
             </div>
         );
-
         const card = (
             <Card
                 className="card-accent-primary"
@@ -918,7 +706,6 @@ class MozhganGrid extends React.Component {
                 </Collapse>
             </Card>
         );
-
         const columnCard = (
             <Col md="12" style={{ padding: "0px", marginBottom: "5px" }}>
                 <Fade timeout={this.state.timeout} in={this.state.fadeIn}>
@@ -926,15 +713,12 @@ class MozhganGrid extends React.Component {
                 </Fade>
             </Col>
         );
-        
         return (
-            
             <div>
                 {columnCard}
                 {grid}
                 <Row>
-                    <Col
-                        md="12"
+                    <Col md="12"
                         style={{ padding: "0px", marginBottom: "5px" }}
                     >
                         {dialog}
@@ -945,8 +729,4 @@ class MozhganGrid extends React.Component {
     }
 }
 
-export default MozhganGrid;
-// ReactDOM.render(
-//     <App />,
-//     document.querySelector('my-app')
-// );
+export default User;

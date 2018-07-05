@@ -1,5 +1,5 @@
-import React from 'react';
 import { GridCell } from '@progress/kendo-react-grid';
+import React from 'react';
 
 export default function cellWithEditing(edit, remove) {
     return class extends GridCell {
@@ -17,7 +17,7 @@ export default function cellWithEditing(edit, remove) {
                         className="k-button k-grid-remove-command"
                         onClick={() => {
                             // confirm('Confirm deleting: ' + this.props.dataItem.ProductName) &&
-                                remove(this.props.dataItem);
+                            remove(this.props.dataItem);
                         }}
                     >
                         Remove

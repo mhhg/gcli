@@ -2,12 +2,10 @@ import { Grid, GridColumn as Column } from '@progress/kendo-react-grid';
 import { Input, NumericTextBox } from '@progress/kendo-react-inputs';
 import React from 'react';
 import { Card, CardBody, CardHeader, Col, Collapse, Fade } from 'reactstrap';
-import cellWithEditing from './cellWithEditing.jsx';
 import Socket from '../../socket';
-import Dialog from './dialog.jsx';
+import cellWithEditing from './CellWithEditing';
 import DetailComponent from "./DetailComponent";
-import { Redirect } from "react-router-dom";
-import { DropDownList } from "@progress/kendo-react-dropdowns";
+import Dialog from './Dialog.jsx';
 
 class Repair extends React.Component {
     constructor(props) {
@@ -602,7 +600,7 @@ class Repair extends React.Component {
                             Add New
                         </button>
                     </GridToolbar> */}
-                     <Column width="120px" 
+                    <Column width="120px"
                         title="Remove"
                         cell={cellWithEditing(this.remove)}
                     />
@@ -629,7 +627,7 @@ class Repair extends React.Component {
                     <Column field="latitude" title="Latitude" width="200px" />
                     <Column field="longitude" title="Longitude" width="200px" />
 
-                   
+
                 </Grid>
                 {this.state.productInEdit && (
                     <Dialog
@@ -690,7 +688,7 @@ class Repair extends React.Component {
     dialogTitle() {
         return `${
             this.state.productInEdit.ProductID === undefined ? 'Add' : 'Edit'
-        } product`;
+            } product`;
     }
     cloneProduct(product) {
         return Object.assign({}, product);

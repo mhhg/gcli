@@ -15,7 +15,6 @@ export default class Dialog extends React.Component {
                                 aria-label="Close"
                                 className="k-button k-bare k-button-icon ' +
                                     'k-window-action k-dialog-action k-dialog-close"
-                                
                                 onClick={() => this.props.close()}
                                 role="button"
                             >
@@ -23,12 +22,13 @@ export default class Dialog extends React.Component {
                             </a>
                         </div>
                     </div>
-                    <div className="k-content k-window-content k-dialog-content"  style={{ overflowX: "hidden" }}>
+                    <div
+                        className="k-content k-window-content k-dialog-content"
+                        style={{ overflowX: 'hidden' }}
+                    >
                         {this.props.children}
                     </div>
-                    <div
-                        className="k-button-group k-dialog-buttongroup k-dialog-button-layout-stretched"
-                    >
+                    <div className="k-button-group k-dialog-buttongroup k-dialog-button-layout-stretched">
                         <button
                             className="k-button"
                             onClick={() => this.props.cancel()}

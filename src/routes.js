@@ -27,30 +27,30 @@ const Map = Loadable({
     loading: Loading
 });
 
-const External = Loadable({
-    loader: () => import("./views/External/main"),
+// const External = Loadable({
+//     loader: () => import("./views/External/main"),
+//     loading: Loading
+// });
+
+const Repair = Loadable({
+    loader: () => import("./views/Repair/Repair"),
     loading: Loading
 });
 
-const repair = Loadable({
-    loader: () => import("./views/Repair/main"),
-    loading: Loading
-});
-
-const client = Loadable({
-    loader: () => import("./views/client/client-file"),
-    loading: Loading
-});
+// const client = Loadable({
+//     loader: () => import("./views/client/client-file"),
+//     loading: Loading
+// });
 
 const routes = [
     { path: "/", exact: true, name: "Home", component: DefaultLayout },
     { path: "/login", exact: true, name: "Login", component: Login },
     { path: "/user", name: "User", component: Users },
-    // { path: "/provider", name: "Provider", component: Providers },
-    { path: "/client", name: "Client", component: client },
+    { path: "/provider", name: "Provider", component: Providers },
+    // { path: "/client", name: "Client", component: client },
+    // { path: "/Provider", name: "Provider", component: External },
     { path: "/map", name: "Map", component: Map },
-    { path: "/Provider", name: "Provider", component: External },
-    { path: "/repair", name: "Repair", component: repair }
+    { path: "/repair", name: "Repair", component: Repair }
 ];
 
 export default routes;
