@@ -16,7 +16,6 @@ class Repair extends React.Component {
     // bind state to callback events which will be triggered when the server response fetched
     this.callbackRead = this.callbackRead.bind(this);
     this.expandChange = this.expandChange.bind(this);
-    const remove = this.remove.bind(this);
     this.edit = this.edit.bind(this);
     this.save = this.save.bind(this);
     this.remove = this.remove.bind(this);
@@ -69,6 +68,9 @@ class Repair extends React.Component {
       skip: response.skip, fields: fields, pageSize: pageSize
     });
   }
+  callbackDelete(strResp) {
+    console.log('[Repair.callbackDelete] strResp: ', strResp);
+  }
   sortChange(e) {
     console.log('[Repair.sortChange] event.sort:', e.sort);
     this.setState({ sort: e.sort });
@@ -80,13 +82,16 @@ class Repair extends React.Component {
   }
   remove(dataItem) {
     console.log("[repair.remove] dataItem:", dataItem);
-    dataItem.inEdit = undefined;
-    this.update(this.state.data, dataItem, true);
-    // this.update(data, dataItem, true);
-    this.setState({ data: this.state.data.slice() });
-    Socket.emit("repair:delete", JSON.stringify({
-      id: dataItem.id
-    }), this.callbackDelete);
+    alert('Confirm deleting: ' + dataItem.lastname);
+    const data = this.state.data.slice();
+    const index = data.findIndex(p => p.requestId === dataItem.requestId);
+    console.log("[repair.remove] index:", index, "data[i]:", data[index]);
+    if (index !== -1) {
+        data.splice(index, 1);
+        this.setState({ data: data });
+    }
+    Socket.emit('repair:delete',
+        JSON.stringify({ id: dataItem.requestId }), this.callbackDelete);
   }
   onPageChange(e) {
     console.log('[Repair.eventOnPageChange] e.page.skip:', e.page.skip, 'e.page.limit:', e.page.limit);
@@ -114,14 +119,6 @@ class Repair extends React.Component {
   }
   edit(dataItem) {
     this.setState({ productInEdit: this.cloneProduct(dataItem) });
-  }
-  remove(dataItem) {
-    const products = this.state.products.slice();
-    const index = products.findIndex(p => p.ProductID === dataItem.ProductID);
-    if (index !== -1) {
-      products.splice(index, 1);
-      this.setState({ products: products });
-    }
   }
   save() {
     const dataItem = this.state.productInEdit;
@@ -314,7 +311,7 @@ class Repair extends React.Component {
             Add New
             </button>
           </GridToolbar> */}
-          <Column width="120px" title="Remove" cell={cellWithEditing(this.remove)} />
+          <Column width="120px" title="Remove" cell={cellWithEditing(null, this.remove)} />
           <Column field="requestId" title="ID" width="150px" />
           <Column field="providerId" title="ProviderID" width="150px" />
           <Column field="firstname" title="Firstname" width="200px" />
@@ -322,9 +319,9 @@ class Repair extends React.Component {
           <Column field="description" title="Description" width="200px" />
           <Column field="model" title="Model" width="200px" />
           <Column field="lpn" title="LPN" width="200px" />
-          <Column field="date" title="Date" />
-          <Column field="time" title="Time" />
-          <Column field="mobile" title="Mobile" />
+          <Column field="date" title="Date" width="200px"/>
+          <Column field="time" title="Time" width="200px"/>
+          <Column field="mobile" title="Mobile" width="200px"/>
           <Column field="voucher" title="Voucher" width="200px" />
           <Column field="service" title="Service" width="200px" />
           <Column field="latitude" title="Latitude" width="200px" />

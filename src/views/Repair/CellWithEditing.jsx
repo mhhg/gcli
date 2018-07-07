@@ -1,5 +1,5 @@
-import { GridCell } from '@progress/kendo-react-grid';
-import React from 'react';
+import { GridCell } from "@progress/kendo-react-grid";
+import React from "react";
 
 export default function cellWithEditing(edit, remove) {
     return class extends GridCell {
