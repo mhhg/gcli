@@ -12,44 +12,28 @@ localStorage.setItem("authState", "false");
 localStorage.setItem("socketConnected", "false");
 let Socket = io.connect(Server.Addr + ":5000", {});
 
-Socket.on("connect", function(str, a, b) {
-  
+Socket.on("connect", function (str, a, b) {
   console.log("[Socket][connection established]");
-  
   localStorage.setItem("socketConnected", "true");
-  
   ReactDOM.render(<App />, document.getElementById("root"));
-  
   Socket.emit("user:auth", localStorage.getItem("superuser"), callbackLogin);
 });
 
 // Socket.on("user:auth", function(msg) {
 //   console.log("[user:auth] triggered.");
-
 //   Socket.emit("user:auth", localStorage.getItem("superuser"), callbackLogin);
 // });
 
-function callbackLogin(stringResponse) {
-  let response = JSON.parse(stringResponse);
-
-  console.log("[Socket.callbackLogin] response:", response);
-
-  if (response.code !== 200) {
-    console.log(
-      "[DEBUG][callbackLogin] unauthorized access. server response: " +
-        stringResponse
-    );
+function callbackLogin(strResp) {
+  let r = JSON.parse(strResp);
+  console.log("[Socket.callbackLogin] response:", r);
+  if (r.code !== 200) {
+    console.log("[DEBUG][callbackLogin] unauthorized access. server response: " + strResp);
     localStorage.setItem("authState", "false");
     return;
   }
-
-  localStorage.setItem("superuser", stringResponse);
+  localStorage.setItem("superuser", strResp);
   localStorage.setItem("authState", "true");
-  
   ReactDOM.render(<App />, document.getElementById("root"));
 }
-
-// SocketIOClient.on('chat:message', msg => console.log(msg));
-// SocketIOClient.emit('chat:message', 'chat:message emit from client!');
-
 export default Socket;

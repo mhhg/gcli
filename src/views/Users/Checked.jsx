@@ -25,9 +25,9 @@ class CheckBox extends GridCell {
         return (
             <td style={{ padding: "2px" }}>
                 {/* <input type="checkbox" className="k-checkbox" {this.state.value} {this.state.status}/> */}
-                <input id="masterCheck" class="k-checkbox" type="checkbox"
+                <input id="masterCheck" className="k-checkbox" type="checkbox"
                     checked={checked} onChange={this.handleChange} />
-                <label for="masterCheck" class="k-checkbox-label"></label>
+                <label htmlFor="masterCheck" className="k-checkbox-label"></label>
             </td>
         );
     }

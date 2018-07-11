@@ -7,54 +7,38 @@ const propTypes = { children: PropTypes.node };
 const defaultProps = {};
 
 class DefaultAside extends Component {
-    constructor(props) {
-        super(props);
-        this.toggle = this.toggle.bind(this);
-        this.state = { activeTab: "1" };
+  constructor(props) {
+    super(props);
+    this.toggle = this.toggle.bind(this);
+    this.state = { activeTab: "1" };
+  }
+  toggle(tab) {
+    if (this.state.activeTab !== tab) {
+      this.setState({ activeTab: tab });
     }
-    toggle(tab) {
-        if (this.state.activeTab !== tab) {
-            this.setState({ activeTab: tab });
-        }
-    }
-    render() {
-        // eslint-disable-next-line
-        const { children, ...attributes } = this.props;
-        return (
-            <React.Fragment>
-                <Nav tabs>
-                    <NavItem>
-                        <NavLink
-                            className={classNames({ active: this.state.activeTab === "1" })}
-                            onClick={() => {
-                                this.toggle("1");
-                            }}
-                        >
-                            <i className="icon-list" />
-                        </NavLink>
-                    </NavItem>
-                    <NavItem>
-                        <NavLink
-                            className={classNames({ active: this.state.activeTab === "2" })}
-                            onClick={() => {
-                                this.toggle("2");
-                            }}
-                        >
-                            <i className="icon-speech" />
-                        </NavLink>
-                    </NavItem>
-                    <NavItem>
-                        <NavLink
-                            className={classNames({ active: this.state.activeTab === "3" })}
-                            onClick={() => {
-                                this.toggle("3");
-                            }}
-                        >
-                            <i className="icon-settings" />
-                        </NavLink>
-                    </NavItem>
-                </Nav>
-                {/* <TabContent activeTab={this.state.activeTab}>
+  }
+  render() {
+    // eslint-disable-next-line
+    const { children, ...attributes } = this.props;
+    return (<React.Fragment>
+      <Nav tabs>
+        <NavItem>
+          <NavLink className={classNames({ active: this.state.activeTab === "1" })}
+            onClick={() => { this.toggle("1"); }}><i className="icon-list" />
+          </NavLink>
+        </NavItem>
+        <NavItem>
+          <NavLink className={classNames({ active: this.state.activeTab === "2" })}
+            onClick={() => { this.toggle("2"); }}><i className="icon-speech" />
+          </NavLink>
+        </NavItem>
+        <NavItem>
+          <NavLink className={classNames({ active: this.state.activeTab === "3" })}
+            onClick={() => { this.toggle("3"); }} > <i className="icon-settings" />
+          </NavLink>
+        </NavItem>
+      </Nav>
+      {/* <TabContent activeTab={this.state.activeTab}>
           <TabPane tabId="1">
             <ListGroup className="list-group-accent">
               <ListGroupItem className="list-group-item-accent-secondary bg-light text-center font-weight-bold text-muted text-uppercase small">
@@ -486,9 +470,9 @@ class DefaultAside extends Component {
             <small className="text-muted">25GB/256GB</small>
           </TabPane>
         </TabContent> */}
-            </React.Fragment>
-        );
-    }
+    </React.Fragment>
+    );
+  }
 }
 DefaultAside.propTypes = propTypes;
 DefaultAside.defaultProps = defaultProps;

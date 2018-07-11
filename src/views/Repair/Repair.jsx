@@ -1,11 +1,8 @@
-import { Grid, GridColumn as Column } from '@progress/kendo-react-grid';
-import { Input, NumericTextBox } from '@progress/kendo-react-inputs';
+import { Grid, GridCell, GridColumn as Column } from '@progress/kendo-react-grid';
 import React from 'react';
 import { Card, CardBody, CardHeader, Col, Collapse, Fade } from 'reactstrap';
+import Server from '../../config';
 import Socket from '../../socket';
-import cellWithEditing from './CellWithEditing';
-import DetailComponent from "./DetailComponent";
-import Dialog from './Dialog.jsx';
 
 class Repair extends React.Component {
   constructor(props) {
@@ -15,7 +12,8 @@ class Repair extends React.Component {
     const initialFilter = { logic: 'and', filters: [] }; // set initial filter state
     // bind state to callback events which will be triggered when the server response fetched
     this.callbackRead = this.callbackRead.bind(this);
-    this.expandChange = this.expandChange.bind(this);
+    this.callbackSMS = this.callbackSMS.bind(this);
+    this.smsSender = this.smsSender.bind(this);
     this.edit = this.edit.bind(this);
     this.save = this.save.bind(this);
     this.remove = this.remove.bind(this);
@@ -33,16 +31,13 @@ class Repair extends React.Component {
       skip: 0, limit: this.defaultPageSize, filter: initialFilter, sort: []
     }), this.callbackRead);
     this.state = {
-      filter: initialFilter,
-      collapse: false, limit: this.defaultPageSize, sort: [],
-      fadeIn: true, timeout: 300, skip: 0, data: [],
-      allowUnsort: true, multiple: false,
-      search: { ownership: 2 },
-      pagerState: {
+      filter: initialFilter, collapse: false, limit: this.defaultPageSize, sort: [],
+      fadeIn: true, timeout: 300, skip: 0, data: [], allowUnsort: true, multiple: false,
+      search: { ownership: 2 }, pagerState: {
         info: true, type: 'numeric', buttonCount: this.defaultButtonCount,
         pageSizes: [5, 10, 25, 50, 75, 100],
         previousNext: true, pageSize: this.defaultPageSize
-      },
+      }, docInEdit: undefined
     };
   }
   callbackRead(stringResponse) {
@@ -68,6 +63,9 @@ class Repair extends React.Component {
       skip: response.skip, fields: fields, pageSize: pageSize
     });
   }
+  callbackSMS(strResp) {
+    console.log('[Repair.callbackSMS] strResp:', strResp);
+  }
   callbackDelete(strResp) {
     console.log('[Repair.callbackDelete] strResp: ', strResp);
   }
@@ -81,17 +79,17 @@ class Repair extends React.Component {
     }), this.callbackRead);
   }
   remove(dataItem) {
-    console.log("[repair.remove] dataItem:", dataItem);
+    console.log('[repair.remove] dataItem:', dataItem);
     alert('Confirm deleting: ' + dataItem.lastname);
     const data = this.state.data.slice();
     const index = data.findIndex(p => p.requestId === dataItem.requestId);
-    console.log("[repair.remove] index:", index, "data[i]:", data[index]);
+    console.log('[repair.remove] index:', index, 'data[i]:', data[index]);
     if (index !== -1) {
-        data.splice(index, 1);
-        this.setState({ data: data });
+      data.splice(index, 1);
+      this.setState({ data: data });
     }
     Socket.emit('repair:delete',
-        JSON.stringify({ id: dataItem.requestId }), this.callbackDelete);
+      JSON.stringify({ id: dataItem.requestId }), this.callbackDelete);
   }
   onPageChange(e) {
     console.log('[Repair.eventOnPageChange] e.page.skip:', e.page.skip, 'e.page.limit:', e.page.limit);
@@ -105,10 +103,8 @@ class Repair extends React.Component {
     console.log('[Repair.filterChange] event.filter:', event.filter);
     this.setState({ filter: event.filter });
     console.log('[Repair.filterChange] before emit read request, this.state.filter:', this.state.filter);
-    console.log('[Repair.filterChange] before emit read request, event.filter:', event.filter);
     this.setState({ filter: event.filter });
     console.log('[Repair.filterChange] before emit read request, this.state.filter:', this.state.filter);
-    console.log('[Repair.filterChange] before emit read request, event.filter:', event.filter);
     Socket.emit('repair:read', JSON.stringify({
       skip: this.state.skip, limit: this.state.limit, search: this.state.search,
       filter: event.filter, sort: this.state.sort
@@ -118,32 +114,32 @@ class Repair extends React.Component {
     event.preventDefault();
   }
   edit(dataItem) {
-    this.setState({ productInEdit: this.cloneProduct(dataItem) });
+    this.setState({ docInEdit: this.cloneDoc(dataItem) });
   }
   save() {
-    const dataItem = this.state.productInEdit;
-    const products = this.state.products.slice();
+    const dataItem = this.state.docInEdit;
+    const data = this.state.data.slice();
     if (dataItem.ProductID === undefined) {
-      products.unshift(this.newProduct(dataItem));
+      data.unshift(this.newProduct(dataItem));
     } else {
-      const index = products.findIndex(p => p.ProductID === dataItem.ProductID);
-      products.splice(index, 1, dataItem);
+      const index = data.findIndex(p => p.ProductID === dataItem.ProductID);
+      data.splice(index, 1, dataItem);
     }
-    this.setState({ products: products, productInEdit: undefined });
+    this.setState({ products: data, docInEdit: undefined });
   }
   cancel() {
-    this.setState({ productInEdit: undefined });
+    this.setState({ docInEdit: undefined });
   }
   insert() {
-    this.setState({ productInEdit: {} });
+    this.setState({ docInEdit: {} });
   }
   onDialogInputChange(event) {
     const target = event.target;
     const value = target.type === 'checkbox' ? target.checked : target.value;
     const name = target.props ? target.props.name : target.name;
-    const edited = this.cloneProduct(this.state.productInEdit);
+    const edited = this.cloneDoc(this.state.docInEdit);
     edited[name] = value;
-    this.setState({ productInEdit: edited });
+    this.setState({ docInEdit: edited });
   }
   updatePagerState(key, value) {
     console.log('[Repair.updatePagerState] key:', key, 'value:', value);
@@ -168,206 +164,201 @@ class Repair extends React.Component {
     this.setState({ fadeIn: !this.state.fadeIn });
   }
   expandChange(event) {
-    console.log('[expandChange] event:', event);
+    console.log('[Repair.expandChange] event:', event);
     event.dataItem.expanded = !event.dataItem.expanded;
     this.forceUpdate();
   }
+  smsSender(dataItem, flag) {
+    console.log('[Repair.smsSender] flag:', flag);
+    let customer = false, provider = false;
+    if (flag === '*') {
+      customer = true, provider = true;
+    } else if (flag == 'customer') {
+      customer = true;
+    } else if (flag == 'provider') {
+      provider = true;
+    } else {
+      console.log('[Repair.smsSender] unknown flag:', flag, ' return...');
+      return;
+    }
+    console.log('[Repair.smsSender] customer:', customer, 'provider:', provider);
+    Socket.emit('repair:confirm-sms', JSON.stringify({
+      id: dataItem.requestId, customer: customer, provider: provider
+    }), this.callbackSMS);
+  }
   render() {
-    const filterState = (
-      <dl>
-        <dt>Filter state:</dt>
-        <dd>
-          <input type="checkbox" className="k-checkbox"
-            id="unsort" checked={this.state.allowUnsort}
-            onChange={e =>
-              this.setState({ allowUnsort: e.target.checked })
-            } />
-          <label htmlFor="unsort" className="k-checkbox-label"
-            style={{ lineHeight: '1.2', marginBottom: '1em' }}>
-            Enable UnSorting</label><br />
-          <input type="checkbox" className="k-checkbox" id="multiSort"
-            checked={this.state.multiple} onChange={e =>
-              this.setState({ multiple: e.target.checked })
-            } />
-          <label htmlFor="multiSort" className="k-checkbox-label"
-            style={{ lineHeight: '1.2' }}>Enable multiple columns sorting</label>
-        </dd>
-      </dl>
+    const filterState = (<dl><dt>Filter state:</dt><dd>
+      <input type='checkbox' className='k-checkbox' id='unsort' checked={this.state.allowUnsort}
+        onChange={e => this.setState({ allowUnsort: e.target.checked })} />
+      <label htmlFor='unsort' className='k-checkbox-label' style={{ lineHeight: '1.2', marginBottom: '1em' }}>
+        Enable UnSorting</label><br />
+      <input type='checkbox' className='k-checkbox' id='multiSort' checked={this.state.multiple}
+        onChange={e => this.setState({ multiple: e.target.checked })} />
+      <label htmlFor='multiSort' className='k-checkbox-label'
+        style={{ lineHeight: '1.2' }}>Enable multiple columns sorting</label>
+    </dd></dl>
     );
-    const pagerTypeState = (
-      <dl>
-        <dt>Pager type:</dt>
-        <dd>
-          <input type="radio" name="pager" id="numeric" value="numeric"
-            className="k-radio" defaultChecked={true} onChange={e => {
-              this.updatePagerState('type', e.target.value);
-            }} />
-          <label style={{ margin: '7px 3em 7px 0px', lineHeight: '1.2' }}
-            className="k-radio-label" htmlFor="numeric">Numeric&nbsp;</label>
-          <input type="radio" name="pager" id="input" value="input"
-            className="k-radio" onChange={e => {
-              this.updatePagerState('type', e.target.value);
-            }} />
-          <label style={{ margin: '7px 3em 7px 0px', lineHeight: '1.2' }}
-            className="k-radio-label" htmlFor="input">Input&nbsp;</label>
-        </dd>
-      </dl>
+    const pagerTypeState = (<dl><dt>Pager type:</dt><dd>
+      <input type='radio' name='pager' id='numeric' value='numeric' className='k-radio' defaultChecked={true}
+        onChange={e => { this.updatePagerState('type', e.target.value); }} />
+      <label style={{ margin: '7px 3em 7px 0px', lineHeight: '1.2' }}
+        className='k-radio-label' htmlFor='numeric'>Numeric&nbsp;</label>
+      <input type='radio' name='pager' id='input' value='input' className='k-radio'
+        onChange={e => { this.updatePagerState('type', e.target.value); }} />
+      <label style={{ margin: '7px 3em 7px 0px', lineHeight: '1.2' }}
+        className='k-radio-label' htmlFor='input'>Input&nbsp;</label>
+    </dd></dl>
     );
-    const infoState = (
-      <dl>
-        <dd>
-          <div className="col-md-12">
-            <input className="k-checkbox" defaultChecked={true}
-              id="showInfo" type="checkbox" onChange={e => {
-                this.updatePagerState('info', e.target.checked);
-              }}
-            />
-            <label htmlFor="showInfo" className="k-checkbox-label">Show info</label>
-          </div>
-          <div className="col-md-12">
-            <input className="k-checkbox" defaultChecked={true} id="pageSize"
-              type="checkbox" onChange={e => {
-                this.updatePagerState('pageSizes', e.target.checked);
-              }}
-            />
-            <label htmlFor="pageSize" className="k-checkbox-label">
-              Show page sizes</label>
-          </div>
-          <div className="col-md-12">
-            <input className="k-checkbox" defaultChecked={true} type="checkbox" id="previousNext"
-              onChange={e => {
-                this.updatePagerState('previousNext', e.target.checked);
-              }}
-            />
-            <label htmlFor="previousNext" className="k-checkbox-label">
-              Show previous / next buttons</label>
-          </div>
-        </dd>
-      </dl>
-    );
-    const buttonsState = (
-      <dl>
-        <dt>Max. number of buttons:</dt>
-        <dd>
-          <input defaultValue="5" className="k-textbox" type="number" onChange={e => {
-            this.updatePagerState('buttonCount', e.target.valueAsNumber);
-          }} />
-        </dd>
-      </dl>
-    );
-    const cardHeader = (
-      <CardHeader>Repair Grid State Form
-        <div className="card-header-actions">
-          <a className="card-header-action btn btn-minimize"
-            data-target="#collapseExample" onClick={this.toggle}>
-            <i className="icon-arrow-up" />
-          </a>
-        </div>
-      </CardHeader>
-    );
-    const cardBody = (
-      <div className="col-md-12 row">
-        <div className="col-md-3">{filterState}</div>
-        <div className="col-md-3">{pagerTypeState}</div>
-        <div className="col-md-3">{infoState}</div>
-        <div className="col-md-3">{buttonsState}</div>
+    const infoState = (<dl><dd>
+      <div className='col-md-12'>
+        <input className='k-checkbox' defaultChecked={true}
+          id='showInfo' type='checkbox' onChange={e => { this.updatePagerState('info', e.target.checked); }} />
+        <label htmlFor='showInfo' className='k-checkbox-label'>Show info</label>
       </div>
+      <div className='col-md-12'>
+        <input className='k-checkbox' defaultChecked={true} id='pageSize'
+          type='checkbox' onChange={e => { this.updatePagerState('pageSizes', e.target.checked); }} />
+        <label htmlFor='pageSize' className='k-checkbox-label'>Show page sizes</label>
+      </div>
+      <div className='col-md-12'>
+        <input className='k-checkbox' defaultChecked={true} type='checkbox' id='previousNext'
+          onChange={e => { this.updatePagerState('previousNext', e.target.checked); }} />
+        <label htmlFor='previousNext' className='k-checkbox-label'>Show previous / next buttons</label>
+      </div>
+    </dd></dl>
+    );
+    const buttonsState = (<dl><dt>Max. number of buttons:</dt><dd>
+      <input defaultValue='5' className='k-textbox' type='number' onChange={e => {
+        this.updatePagerState('buttonCount', e.target.valueAsNumber);
+      }} />
+    </dd></dl>
+    );
+    const cardHeader = (<CardHeader>Repair Grid State Form<div className='card-header-actions'>
+      <a className='card-header-action btn btn-minimize' data-target='#collapseExample' onClick={this.toggle}>
+        <i className='icon-arrow-up' /></a>
+    </div></CardHeader>
+    );
+    const cardBody = (<div className='col-md-12 row'>
+      <div className='col-md-3'>{filterState}</div>
+      <div className='col-md-3'>{pagerTypeState}</div>
+      <div className='col-md-3'>{infoState}</div>
+      <div className='col-md-3'>{buttonsState}</div>
+    </div>
     );
     const card = (
-      <Card className="card-accent-primary" style={{ padding: '0px', marginBottom: '5px' }}>
+      <Card className='card-accent-primary' style={{ padding: '0px', marginBottom: '5px' }}>
         {cardHeader}
-        <Collapse isOpen={this.state.collapse} id="collapseExample">
+        <Collapse isOpen={this.state.collapse} id='collapseExample'>
           <CardBody>
-            <div className="example-config row">{cardBody}</div>
+            <div className='example-config row'>{cardBody}</div>
           </CardBody>
         </Collapse>
       </Card>
     );
-    const columnCard = (
-      <Col md="12" style={{ padding: '0px', marginBottom: '5px' }}>
-        <Fade timeout={this.state.timeout} in={this.state.fadeIn}>
-          {card}
-        </Fade>
-      </Col>
-    );
-    return (
-      <div>
-        {columnCard}
-        <Grid data={this.state.data} style={{ maxHeight: '750px' }}
-          detail={DetailComponent} expandField="expanded"
-          expandChange={this.expandChange} skip={this.state.skip}
-          total={this.state.total} pageable={this.state.pagerState}
-          pageSize={this.state.pageSize} filterable={true}
-          filter={this.state.filter} filterChange={this.filterChange}
-          sort={this.state.sort} sortChange={this.sortChange}
-          sortable={{
-            allowUnsort: this.state.allowUnsort,
-            mode: this.state.multiple ? 'multiple' : 'single'
-          }}
-          pageChange={this.onPageChange.bind(this)}
-        >
-          {/* <GridToolbar>
-            <button onClick={this.insert} className="k-button">
-            Add New
-            </button>
-          </GridToolbar> */}
-          <Column width="120px" title="Remove" cell={cellWithEditing(null, this.remove)} />
-          <Column field="requestId" title="ID" width="150px" />
-          <Column field="providerId" title="ProviderID" width="150px" />
-          <Column field="firstname" title="Firstname" width="200px" />
-          <Column field="lastname" title="Lastname" width="200px" />
-          <Column field="description" title="Description" width="200px" />
-          <Column field="model" title="Model" width="200px" />
-          <Column field="lpn" title="LPN" width="200px" />
-          <Column field="date" title="Date" width="200px"/>
-          <Column field="time" title="Time" width="200px"/>
-          <Column field="mobile" title="Mobile" width="200px"/>
-          <Column field="voucher" title="Voucher" width="200px" />
-          <Column field="service" title="Service" width="200px" />
-          <Column field="latitude" title="Latitude" width="200px" />
-          <Column field="longitude" title="Longitude" width="200px" />
-        </Grid>
-        {this.state.productInEdit && (<Dialog title={this.dialogTitle()}
-          close={this.cancel} ok={this.save} cancel={this.cancel}>
-          <form onSubmit={this.handleSubmit}>
-            <div style={{ marginBottom: '1rem' }}>
-              <label>Product Name<br /><Input type="text" name="ProductName"
-                value={this.state.productInEdit.ProductName || ''}
-                onChange={this.onDialogInputChange} /></label>
-            </div>
-            <div style={{ marginBottom: '1rem' }}>
-              <label>Units In Stock<br /><NumericTextBox name="UnitsInStock"
-                value={this.state.productInEdit.UnitsInStock || 0}
-                onChange={this.onDialogInputChange} /></label>
-            </div>
-            <div>
-              <label>
-                <input type="checkbox" name="Discontinued"
-                  checked={this.state.productInEdit.Discontinued || false}
-                  onChange={this.onDialogInputChange}
-                />Discontinued product</label>
-            </div>
-          </form>
-        </Dialog>)}
-      </div>
-    );
+    const columnCard = (<Col md='12' style={{ padding: '0px', marginBottom: '5px' }}>
+      <Fade timeout={this.state.timeout} in={this.state.fadeIn}>{card}</Fade>
+    </Col>);
+    const cellWithCheckBox = function (value) {
+      return class CheckBox extends GridCell {
+        constructor(props) {
+          super(props);
+          this.handleChange = this.handleChange.bind(this);
+        }
+        handleChange(e) {
+          this.props.onChange({
+            dataItem: this.props.dataItem, field: this.props.field,
+            syntheticEvent: e.syntheticEvent, value: !e.target.value
+          });
+        }
+        render() {
+          let checked = '';
+          if (value === 'cp') {
+            if (this.props.dataItem.cp === true) {
+              checked = 'checked';
+            }
+          } else if (value === 'pp') {
+            if (this.props.dataItem.pp === true) {
+              checked = 'checked';
+            }
+          }
+          // TODO: These styles should be changed in future,
+          // border-color: black!important;
+          // should be assigned.
+          // .k-checkbox-label:after, .k-checkbox-label:before, .k-radio-label:after, .k-radio-label:before
+          return (<td style={{ paddingLeft: '10px' }}>
+            {/* <input type='checkbox' className='k-checkbox' {this.state.value} {this.state.status}/> */}
+            <input id='masterCheck' className='k-checkbox' type='checkbox' checked={checked} onChange={this.handleChange} />
+            <label htmlFor='masterCheck' className='k-checkbox-label' />
+          </td>);
+        }
+      };
+    }
+    const grid = (<Grid data={this.state.data} style={{ maxHeight: '750px' }}
+      // detail={DetailComponent} expandField='expanded' expandChange={this.expandChange}
+      skip={this.state.skip} total={this.state.total} pageable={this.state.pagerState}
+      pageSize={this.state.pageSize} filterable={true}
+      filter={this.state.filter} filterChange={this.filterChange}
+      sort={this.state.sort} sortChange={this.sortChange}
+      sortable={{ allowUnsort: this.state.allowUnsort, mode: this.state.multiple ? 'multiple' : 'single' }}
+      pageChange={this.onPageChange.bind(this)}>
+      <Column title='Remove' cell={cellWithEditing(null, this.remove)} filterable={false} sortable={false} width='110px' />
+      <Column title='Confirm SMS' cell={cellWithSMS(this.smsSender)} filterable={false} sortable={false} width='120px' />
+      <Column field='requestId' title='ID' width='150px' />
+      <Column field='providerId' title='ProviderID' width='97px' cell={cellWithLink(Server.Addr + '/#/service-center/')} />
+      <Column field='firstname' title='Firstname' width='200px' />
+      <Column field='lastname' title='Lastname' width='200px' />
+      <Column field='description' title='Description' width='200px' />
+      <Column field='cp' editor='boolean' filter='boolean' title='CustomerPaid' width='120px' cell={cellWithCheckBox('cp')} />
+      <Column field='pp' editor='boolean' filter='boolean' title='ProviderPaid' width='120px' cell={cellWithCheckBox('pp')} />
+      <Column field='description' title='Description' width='200px' />
+      <Column field='model' title='Model' width='200px' />
+      <Column field='lpn' title='LPN' width='200px' />
+      <Column field='date' title='Date' width='200px' />
+      <Column field='time' title='Time' width='200px' />
+      <Column field='mobile' title='Mobile' width='200px' />
+      <Column field='voucher' title='Voucher' width='200px' />
+      <Column field='service' title='Service' width='200px' />
+      <Column field='latitude' title='Latitude' width='200px' />
+      <Column field='longitude' title='Longitude' width='200px' />
+    </Grid>);
+    return (<div>{columnCard}{grid}</div>);
   }
-  dialogTitle() {
-    return `${
-      this.state.productInEdit.ProductID === undefined ? 'Add' : 'Edit'
-      } product`;
+  cloneDoc(doc) {
+    return Object.assign({}, doc);
   }
-  cloneProduct(product) {
-    return Object.assign({}, product);
-  }
-  newProduct(source) {
-    const newProduct = {
-      firstname: '', Lastname: '', description: '', model: '',
-      lpn: '', date: '', time: '', mobile: '', voucher: '',
-      service: '', latitude: 0.0, longitude: 0.0
-    };
-    return Object.assign(newProduct, source);
-  }
+}
+const cellWithEditing = function (edit, remove) {
+  return class extends GridCell {
+    render() {
+      return (<td>
+        {/* <button className='k-primary k-button k-grid-edit-command' onClick={() => { edit(this.props.dataItem); }}>Edit</button>&nbsp; */}
+        <button className='k-button k-grid-remove-command' onClick={() => { remove(this.props.dataItem); }}>Remove</button>
+      </td>)
+    }
+  };
+}
+const cellWithSMS = function (smsSender) {
+  return class extends GridCell {
+    render() {
+      return (<td>
+        <button className='k-button' onClick={() => { smsSender(this.props.dataItem, 'customer'); }}>C</button>
+        <button className='k-button' onClick={() => { smsSender(this.props.dataItem, 'provider'); }}>P</button>
+        <button className='k-button' onClick={() => { smsSender(this.props.dataItem, '*'); }}>*</button>
+      </td>)
+    }
+  };
+}
+const cellWithLink = function (basePath) {
+  return class extends GridCell {
+    render() {
+      const link = basePath + this.props.dataItem.providerId;
+      console.log('[cellWithLink] link:', link);
+      return (<td>
+        <a target='_blank' rel='noopener noreferrer' href={link}>...{this.props.dataItem.requestId}</a>
+      </td>
+      );
+    }
+  };
 }
 
 export default Repair;

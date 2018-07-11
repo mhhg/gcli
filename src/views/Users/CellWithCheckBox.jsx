@@ -35,9 +35,9 @@ export default function cellWithCheckBox(value) {
                 <td style={{ padding: "2px" }}>
                     {/* <input type="checkbox" className="k-checkbox" {this.state.value} {this.state.status}/> */}
                     <input id="masterCheck"
-                        class="k-checkbox" type="checkbox" checked={checked}
+                        className="k-checkbox" type="checkbox" checked={checked}
                         onChange={this.handleChange}/>
-                    <label for="masterCheck" class="k-checkbox-label" />
+                    <label htmlFor="masterCheck" className="k-checkbox-label" />
                 </td>
             );
         }
