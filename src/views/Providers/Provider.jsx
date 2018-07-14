@@ -6,6 +6,8 @@ import Socket from '../../socket';
 import AvatarCell from './AvatarCell';
 import DetailComponent from './DetailComponent';
 import Dialog from './Dialog';
+import kendo from '@progress/kendo-ui';
+import { Editor } from '@progress/kendo-editor-react-wrapper';
 
 class Provider extends React.Component {
   constructor(props) {
@@ -105,8 +107,15 @@ class Provider extends React.Component {
   }
   onDialogInputChange(event) {
     const target = event.target;
-    const value = target.type === 'checkbox' ? target.checked : target.value;
-    const name = target.props ? target.props.name : target.name;
+    let value, name;
+    if (target !== undefined) {
+      value = target.type === 'checkbox' ? target.checked : target.value;
+      name = target.props ? target.props.name : target.name;
+    } else {
+      value = event.sender.value();
+      name = 'description';
+    }
+    console.log('[Providers.onDialogInputChange] value:', value);
     const edited = this.cloneDocument(this.state.docInEdit);
     edited[name] = value;
     console.log('[Providers.onDialogInputChange] edited:', edited, 'name:', name, 'value:', value);
@@ -195,8 +204,7 @@ class Provider extends React.Component {
     const grid = (<Grid data={this.state.data} style={{ maxHeight: '750px' }}
       detail={DetailComponent} expandChange={this.expandChange} expandField="expanded"
       filterable={true} filter={this.state.filter} filterChange={this.filterChange}
-      pageChange={this.onPageChange.bind(this)}
-      skip={this.state.skip} total={this.state.total}
+      pageChange={this.onPageChange.bind(this)} skip={this.state.skip} total={this.state.total}
       pageable={this.state.pagerState} pageSize={this.state.pageSize}
       sort={this.state.sort} sortChange={this.sortChange}
       sortable={{ allowUnsort: this.state.allowUnsort, mode: this.state.multiple ? 'multiple' : 'single' }}>
@@ -228,10 +236,6 @@ class Provider extends React.Component {
           <Input className="form-control" type="text" name="categories"
             value={this.state.docInEdit.categories || ''} onChange={this.onDialogInputChange} /></label>
         </div>
-        <div style={{ marginBottom: '1rem' }} className="col-md-6"><label>Description<br />
-          <Input className="form-control" type="text" name="description"
-            value={this.state.docInEdit.description || ''} onChange={this.onDialogInputChange} /></label>
-        </div>
         <div style={{ marginBottom: '1rem' }} className="col-md-6"><label>PhoneNumbers<br />
           <Input className="form-control" type="text" name="phoneNumbers"
             value={this.state.docInEdit.phoneNumbers || ''} onChange={this.onDialogInputChange} /></label>
@@ -244,18 +248,23 @@ class Provider extends React.Component {
           <Input className="form-control" type="text" name="background"
             value={this.state.docInEdit.background || ''} onChange={this.onDialogInputChange} /></label>
         </div>
-        <div style={{ marginBottom: '1rem' }} className="col-md-6"><label>latitude<br />
+        {/* <div style={{ marginBottom: '1rem' }} className="col-md-6"><label>latitude<br />
           <Input className="form-control" type="text" name="latitude"
             value={this.state.docInEdit.latitude || ''} onChange={this.onDialogInputChange} /></label>
         </div>
         <div style={{ marginBottom: '1rem' }} className="col-md-6"><label>longitude<br />
           <Input className="form-control" type="text" name="longitude"
             value={this.state.docInEdit.longitude || ''} onChange={this.onDialogInputChange} /></label>
-        </div>
+        </div> */}
         <div className="col-md-6 k-form-field" style={{ marginBottom: '1rem' }} >
           <input id="ch1" className="k-checkbox form-control" type="checkbox" name="isConfirmed"
             checked={this.state.docInEdit.isConfirmed || ''} onChange={this.onDialogInputChange} />
           <label className="k-checkbox-label" htmlFor="ch1">IsConfirmed<br /></label>
+        </div>
+        <div style={{ marginBottom: '1rem' }} className="col-md-6"><label>Description<br />
+          <Editor value={this.state.docInEdit.description || ''} height={500} change={this.onDialogInputChange}/>
+          {/* <Input className="form-control" type="text" name="description" value={this.state.docInEdit.description || ''} onChange={this.onDialogInputChange} /> */}
+          </label>
         </div>
       </form>
     </Dialog>

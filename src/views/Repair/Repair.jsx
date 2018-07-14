@@ -265,6 +265,12 @@ class Repair extends React.Component {
           this.handleChange = this.handleChange.bind(this);
         }
         handleChange(e) {
+          let field = this.props.field;
+          let dataItem = this.props.dataItem;
+          let syntheticEvent = e.syntheticEvent;
+          let value = e.target.value;
+          console.log("[cell_cp|pp] field:", field, "dataItem:", dataItem, "value:", value);
+          console.log("[cell_cp|pp] dI.cp:", dataItem.cp, "dI.pp:", dataItem.pp);
           this.props.onChange({
             dataItem: this.props.dataItem, field: this.props.field,
             syntheticEvent: e.syntheticEvent, value: !e.target.value
@@ -351,10 +357,14 @@ const cellWithSMS = function (smsSender) {
 const cellWithLink = function (basePath) {
   return class extends GridCell {
     render() {
-      const link = basePath + this.props.dataItem.providerId;
-      console.log('[cellWithLink] link:', link);
+      let link = basePath + this.props.dataItem.providerId, value = "";
+      const id = this.props.dataItem.providerId;
+      if (id !== undefined) {
+        value = "..." + this.props.dataItem.providerId;
+      }
+      console.log('[cellWithLink] link:', link, 'id:', id);
       return (<td>
-        <a target='_blank' rel='noopener noreferrer' href={link}>...{this.props.dataItem.requestId}</a>
+        <a target='_blank' rel='noopener noreferrer' href={link}>{value}</a>
       </td>
       );
     }
