@@ -112,8 +112,7 @@ class Provider extends React.Component {
       value = target.type === 'checkbox' ? target.checked : target.value;
       name = target.props ? target.props.name : target.name;
     } else {
-      value = event.sender.value();
-      name = 'description';
+      value = event.sender.value(), name = event.sender.options.name;
     }
     console.log('[Providers.onDialogInputChange] value:', value);
     const edited = this.cloneDocument(this.state.docInEdit);
@@ -196,7 +195,7 @@ class Provider extends React.Component {
           return (<td><button className="k-primary k-button k-grid-edit-command"
             onClick={() => { edit(this.props.dataItem); }}>Edit</button>&nbsp;
           <button className="k-button k-grid-remove-command"
-              onClick={() => { remove(this.props.dataItem); }} >Remove</button>
+              onClick={() => { remove(this.props.dataItem); }}>Remove</button>
           </td>);
         }
       };
@@ -211,8 +210,9 @@ class Provider extends React.Component {
       <GridToolbar><button onClick={this.insert} className="k-button">Add New</button></GridToolbar>
       <Column title="" editable={false} sortable={false} filterable={false} cell={cellWithEditing(this.edit, this.remove)} width="169px" />
       <Column field="name" title="Name" width="230px" />
-      <Column field="description" title="Description" width="230px"/>
-      <Column field="address" title="Address" width="230px"/>
+      <Column field="description" title="Description" width="230px" />
+      <Column field="advertisement" title="Advertisement" width="230px" />
+      <Column field="address" title="Address" width="230px" />
       <Column field="imageId" title="Image" editable={false} sortable={false} filterable={false} cell={AvatarCell} width="90px" />
       <Column field="isConfirmed" title="IsConfirmed" editor="boolean" filter="boolean" width="150px" />
       <Column field="categories" title="Categories" editable={false} sortable={false} width="200px" />
@@ -223,8 +223,7 @@ class Provider extends React.Component {
       <Column field="latitude" title="Latitude" sortable={false} editable={false} filter="numeric" width="160px" />
       <Column field="longitude" title="Longitude" sortable={false} editable={false} filter="numeric" width="160px" />
       <Column field="id" title="ID" width="230px" />
-    </Grid>
-    );
+    </Grid>);
     const dialog = this.state.docInEdit && (<Dialog title={this.dialogTitle()}
       close={this.cancel} ok={this.save} cancel={this.cancel} >
       <form className="row k-form" onSubmit={this.handleSubmit}>
@@ -262,16 +261,20 @@ class Provider extends React.Component {
           <label className="k-checkbox-label" htmlFor="ch1">IsConfirmed<br /></label>
         </div>
         <div style={{ marginBottom: '1rem' }} className="col-md-6"><label>Description<br />
-          <Editor value={this.state.docInEdit.description || ''} height={500} change={this.onDialogInputChange}/>
+          <Editor name='description'  height={500} value={this.state.docInEdit.description || ''} change={this.onDialogInputChange} />
           {/* <Input className="form-control" type="text" name="description" value={this.state.docInEdit.description || ''} onChange={this.onDialogInputChange} /> */}
-          </label>
+        </label>
+        </div>
+        <div style={{ marginBottom: '1rem' }} className="col-md-6"><label>Advertisement<br />
+          <Editor name='advertisement' height={500} value={this.state.docInEdit.advertisement || ''} change={this.onDialogInputChange} />
+        </label>
         </div>
       </form>
     </Dialog>
     );
     const ownershipState = (<dl><dt>Ownership status filter:</dt><dd>
-      <input type="radio" name="ownership" id="ownershipTemplate"
-        className="k-radio" value="1" onChange={e => { this.updateOwnerState('type', e.target.value); }} />
+      <input type="radio" name="ownership" id="ownershipTemplate" className="k-radio"
+        value="1" onChange={e => { this.updateOwnerState('type', e.target.value); }} />
       <label style={{ margin: '7px 3em 7px 0px', lineHeight: '1.2' }}
         className="k-radio-label" htmlFor="ownershipTemplate">Template (Excel)&nbsp;</label>
       <input defaultChecked={true} type="radio" name="ownership" id="ownershipRegistered"

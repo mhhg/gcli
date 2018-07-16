@@ -243,8 +243,7 @@ class Repair extends React.Component {
       <div className='col-md-3'>{pagerTypeState}</div>
       <div className='col-md-3'>{infoState}</div>
       <div className='col-md-3'>{buttonsState}</div>
-    </div>
-    );
+    </div>);
     const card = (
       <Card className='card-accent-primary' style={{ padding: '0px', marginBottom: '5px' }}>
         {cardHeader}
