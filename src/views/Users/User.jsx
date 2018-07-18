@@ -1,4 +1,4 @@
-import { Grid, GridCell,  GridColumn as Column, GridToolbar } from "@progress/kendo-react-grid";
+import { Grid, GridCell, GridColumn as Column, GridToolbar } from "@progress/kendo-react-grid";
 import { Input } from "@progress/kendo-react-inputs";
 import React from "react";
 import { Card, CardBody, CardHeader, Col, Collapse, Fade, Row } from "reactstrap";
@@ -306,46 +306,33 @@ class User extends React.Component {
         </form>
       </Dialog>
     );
-    const ownershipState = (
-      <dl>
-        <dt>Ownership status filter:</dt>
-        <dd>
-          <input type="radio" name="ownership" id="ownershipTemplate" className="k-radio"
-            value="1" onChange={e => { this.updateOwnerState("type", e.target.value); }} />
-          <label style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
-            className="k-radio-label" htmlFor="ownershipTemplate" >Template (Excel)&nbsp;
-          </label>
-          <input defaultChecked={true} type="radio" name="ownership"
-            id="ownershipRegistered" className="k-radio" value="2"
-            onChange={e => { this.updateOwnerState("type", e.target.value); }} />
-          <label style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
-            className="k-radio-label" htmlFor="ownershipRegistered" >
-            Registered&nbsp; </label>
-          <input type="radio" name="ownership" id="ownershipAll" className="k-radio"
-            value="0" onChange={e => { this.updateOwnerState("type", e.target.value); }} />
-          <label style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
-            className="k-radio-label" htmlFor="ownershipAll" >All&nbsp;</label>
-        </dd>
-      </dl>
-    );
-    const filterState = (
-      <dl>
-        <dt>Filter state:</dt>
-        <dd>
-          <input type="checkbox" className="k-checkbox" id="unsort" checked={this.state.allowUnsort}
-            onChange={e => this.setState({ allowUnsort: e.target.checked })} />
-          <label htmlFor="unsort" className="k-checkbox-label"
-            style={{ lineHeight: "1.2", marginBottom: "1em" }} >
-            Enable UnSorting</label><br />
-          <input type="checkbox" className="k-checkbox" id="multiSort"
-            checked={this.state.multiple} onChange={e => this.setState({
-              multiple: e.target.checked
-            })} />
-          <label htmlFor="multiSort" className="k-checkbox-label"
-            style={{ lineHeight: "1.2" }} >Enable multiple columns sorting</label>
-        </dd>
-      </dl>
-    );
+    const ownershipState = (<dl><dt>Ownership status filter:</dt><dd>
+      <input type="radio" name="ownership" id="ownershipTemplate" className="k-radio"
+        value="1" onChange={e => { this.updateOwnerState("type", e.target.value); }} />
+      <label style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
+        className="k-radio-label" htmlFor="ownershipTemplate" >Template (Excel)&nbsp;</label>
+      <input defaultChecked={true} type="radio" name="ownership"
+        id="ownershipRegistered" className="k-radio" value="2"
+        onChange={e => { this.updateOwnerState("type", e.target.value); }} />
+      <label style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
+        className="k-radio-label" htmlFor="ownershipRegistered" >
+        Registered&nbsp; </label>
+      <input type="radio" name="ownership" id="ownershipAll" className="k-radio"
+        value="0" onChange={e => { this.updateOwnerState("type", e.target.value); }} />
+      <label style={{ margin: "7px 3em 7px 0px", lineHeight: "1.2" }}
+        className="k-radio-label" htmlFor="ownershipAll" >All&nbsp;</label>
+    </dd></dl>);
+    const filterState = (<dl><dt>Filter state:</dt><dd>
+      <input type="checkbox" className="k-checkbox" id="unsort" checked={this.state.allowUnsort}
+        onChange={e => this.setState({ allowUnsort: e.target.checked })} />
+      <label htmlFor="unsort" className="k-checkbox-label"
+        style={{ lineHeight: "1.2", marginBottom: "1em" }} >
+        Enable UnSorting</label><br />
+      <input type="checkbox" className="k-checkbox" id="multiSort"
+        checked={this.state.multiple} onChange={e => this.setState({ multiple: e.target.checked })} />
+      <label htmlFor="multiSort" className="k-checkbox-label"
+        style={{ lineHeight: "1.2" }} >Enable multiple columns sorting</label>
+    </dd></dl>);
     const pagerTypeState = (
       <dl>
         <dt>Pager type:</dt>

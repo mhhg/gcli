@@ -12,6 +12,7 @@ class Repair extends React.Component {
     const initialFilter = { logic: 'and', filters: [] }; // set initial filter state
     // bind state to callback events which will be triggered when the server response fetched
     this.callbackRead = this.callbackRead.bind(this);
+    this.callbackSave = this.callbackSave.bind(this);
     this.callbackSMS = this.callbackSMS.bind(this);
     this.smsSender = this.smsSender.bind(this);
     this.edit = this.edit.bind(this);
@@ -19,6 +20,8 @@ class Repair extends React.Component {
     this.remove = this.remove.bind(this);
     this.cancel = this.cancel.bind(this);
     this.insert = this.insert.bind(this);
+    this.itemChange = this.itemChange.bind(this);
+    this.update = this.update.bind(this);
     this.onDialogInputChange = this.onDialogInputChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.filterChange = this.filterChange.bind(this);
@@ -67,7 +70,10 @@ class Repair extends React.Component {
     console.log('[Repair.callbackSMS] strResp:', strResp);
   }
   callbackDelete(strResp) {
-    console.log('[Repair.callbackDelete] strResp: ', strResp);
+    console.log('[Repair.callbackDelete] strResp:', strResp);
+  }
+  callbackSave(strResp) {
+    console.log('[Repair.callbackSave] strResp:', strResp);
   }
   sortChange(e) {
     console.log('[Repair.sortChange] event.sort:', e.sort);
@@ -168,6 +174,31 @@ class Repair extends React.Component {
     event.dataItem.expanded = !event.dataItem.expanded;
     this.forceUpdate();
   }
+  itemChange(dataItem, field, value) {
+    console.log("[Repair.itemChange] dataItem.cp:", dataItem.cp,
+      ', dataItem.pp:', dataItem.pp, ', field:', field, ', value:', value)
+    const updatedData = this.state.data.slice();
+    const item = this.update(updatedData, dataItem);
+    item[field] = value;
+    this.setState({ data: updatedData });
+    Socket.emit('repair:save', JSON.stringify({
+      requestId: item.requestId, pp: item.pp, cp: item.cp
+    }), this.callbackSave);
+  }
+  update(data, item) {
+    console.log("[Repair.update] item.cp:", item.cp,
+      "item.pp:", item.pp, "data.len:", data.length);
+    let updated;
+    let idx = data.findIndex(
+      p => p === item || (item.requestId && p.requestId === item.requestId));
+    console.log("[Repair.update] index:", idx);
+    if (idx >= 0) {
+      updated = Object.assign({}, item);
+      data[idx] = updated;
+      console.log("[Repair.update] data[index].cp:", data[idx].cp, "data[index].pp:", data[idx].pp);;
+    }
+    return data[idx];
+  }
   smsSender(dataItem, flag) {
     console.log('[Repair.smsSender] flag:', flag);
     let customer = false, provider = false;
@@ -196,8 +227,7 @@ class Repair extends React.Component {
         onChange={e => this.setState({ multiple: e.target.checked })} />
       <label htmlFor='multiSort' className='k-checkbox-label'
         style={{ lineHeight: '1.2' }}>Enable multiple columns sorting</label>
-    </dd></dl>
-    );
+    </dd></dl>);
     const pagerTypeState = (<dl><dt>Pager type:</dt><dd>
       <input type='radio' name='pager' id='numeric' value='numeric' className='k-radio' defaultChecked={true}
         onChange={e => { this.updatePagerState('type', e.target.value); }} />
@@ -207,8 +237,7 @@ class Repair extends React.Component {
         onChange={e => { this.updatePagerState('type', e.target.value); }} />
       <label style={{ margin: '7px 3em 7px 0px', lineHeight: '1.2' }}
         className='k-radio-label' htmlFor='input'>Input&nbsp;</label>
-    </dd></dl>
-    );
+    </dd></dl>);
     const infoState = (<dl><dd>
       <div className='col-md-12'>
         <input className='k-checkbox' defaultChecked={true}
@@ -225,14 +254,12 @@ class Repair extends React.Component {
           onChange={e => { this.updatePagerState('previousNext', e.target.checked); }} />
         <label htmlFor='previousNext' className='k-checkbox-label'>Show previous / next buttons</label>
       </div>
-    </dd></dl>
-    );
+    </dd></dl>);
     const buttonsState = (<dl><dt>Max. number of buttons:</dt><dd>
       <input defaultValue='5' className='k-textbox' type='number' onChange={e => {
         this.updatePagerState('buttonCount', e.target.valueAsNumber);
       }} />
-    </dd></dl>
-    );
+    </dd></dl>);
     const cardHeader = (<CardHeader>Repair Grid State Form<div className='card-header-actions'>
       <a className='card-header-action btn btn-minimize' data-target='#collapseExample' onClick={this.toggle}>
         <i className='icon-arrow-up' /></a>
@@ -248,52 +275,58 @@ class Repair extends React.Component {
       <Card className='card-accent-primary' style={{ padding: '0px', marginBottom: '5px' }}>
         {cardHeader}
         <Collapse isOpen={this.state.collapse} id='collapseExample'>
-          <CardBody>
-            <div className='example-config row'>{cardBody}</div>
-          </CardBody>
+          <CardBody><div className='example-config row'>{cardBody}</div></CardBody>
         </Collapse>
-      </Card>
-    );
+      </Card>);
     const columnCard = (<Col md='12' style={{ padding: '0px', marginBottom: '5px' }}>
       <Fade timeout={this.state.timeout} in={this.state.fadeIn}>{card}</Fade>
     </Col>);
-    const cellWithCheckBox = function (value) {
+    const cellWithCheckBox = function (onChange, value) {
       return class CheckBox extends GridCell {
         constructor(props) {
           super(props);
+          this.value = value;
           this.handleChange = this.handleChange.bind(this);
+          this.onChange = onChange;
         }
         handleChange(e) {
-          let field = this.props.field;
-          let dataItem = this.props.dataItem;
-          let syntheticEvent = e.syntheticEvent;
-          let value = e.target.value;
-          console.log("[cell_cp|pp] field:", field, "dataItem:", dataItem, "value:", value);
-          console.log("[cell_cp|pp] dI.cp:", dataItem.cp, "dI.pp:", dataItem.pp);
+          let value;
+          if (this.props.field === 'cp') {
+            value = !this.props.dataItem.cp;
+            // this.props.dataItem.cp = value;
+          } else if (this.props.field === 'pp') {
+            value = !this.props.dataItem.pp;
+            // this.props.dataItem.pp = value;
+          }
+          console.log("[Repair.cellWithCheckBox] field:", this.props.field, "value:", value,
+            "dataItem.cp:", this.props.dataItem.cp, "dataItem.pp:", this.props.dataItem.pp);
           this.props.onChange({
             dataItem: this.props.dataItem, field: this.props.field,
-            syntheticEvent: e.syntheticEvent, value: !e.target.value
+            syntheticEvent: e.syntheticEvent, value: !e.target.value,
           });
+          this.onChange(this.props.dataItem, this.props.field, value);
         }
         render() {
           let checked = '';
-          if (value === 'cp') {
+          // console.log("[render] value:", value, this.value)
+          if (this.value === 'cp') {
             if (this.props.dataItem.cp === true) {
               checked = 'checked';
             }
-          } else if (value === 'pp') {
+          } else if (this.value === 'pp') {
             if (this.props.dataItem.pp === true) {
               checked = 'checked';
             }
           }
+          const id = this.value + "_" + this.props.dataItem.requestId;
           // TODO: These styles should be changed in future,
           // border-color: black!important;
           // should be assigned.
           // .k-checkbox-label:after, .k-checkbox-label:before, .k-radio-label:after, .k-radio-label:before
           return (<td style={{ paddingLeft: '10px' }}>
             {/* <input type='checkbox' className='k-checkbox' {this.state.value} {this.state.status}/> */}
-            <input id='masterCheck' className='k-checkbox' type='checkbox' checked={checked} onChange={this.handleChange} />
-            <label htmlFor='masterCheck' className='k-checkbox-label' />
+            <input id={id} className='k-checkbox' type='checkbox' checked={checked} onChange={this.handleChange} />
+            <label htmlFor={id} className='k-checkbox-label' />
           </td>);
         }
       };
@@ -301,9 +334,9 @@ class Repair extends React.Component {
     const grid = (<Grid data={this.state.data} style={{ maxHeight: '750px' }}
       // detail={DetailComponent} expandField='expanded' expandChange={this.expandChange}
       skip={this.state.skip} total={this.state.total} pageable={this.state.pagerState}
-      pageSize={this.state.pageSize} filterable={true}
+      pageSize={this.state.pageSize} filterable={true} editField="inEdit"
       filter={this.state.filter} filterChange={this.filterChange}
-      sort={this.state.sort} sortChange={this.sortChange}
+      sort={this.state.sort} sortChange={this.sortChange} // onChange={this.itemChange}
       sortable={{ allowUnsort: this.state.allowUnsort, mode: this.state.multiple ? 'multiple' : 'single' }}
       pageChange={this.onPageChange.bind(this)}>
       <Column title='Remove' cell={cellWithEditing(null, this.remove)} filterable={false} sortable={false} width='110px' />
@@ -313,8 +346,10 @@ class Repair extends React.Component {
       <Column field='firstname' title='Firstname' width='200px' />
       <Column field='lastname' title='Lastname' width='200px' />
       <Column field='description' title='Description' width='200px' />
-      <Column field='cp' editor='boolean' filter='boolean' title='CustomerPaid' width='120px' cell={cellWithCheckBox('cp')} />
-      <Column field='pp' editor='boolean' filter='boolean' title='ProviderPaid' width='120px' cell={cellWithCheckBox('pp')} />
+      <Column field='cp' editable={true} editor='boolean' filter='boolean' title='CustomerPaid'
+        width='120px' cell={cellWithCheckBox(this.itemChange, 'cp')} />
+      <Column field='pp' editable={true} editor='boolean' filter='boolean' title='ProviderPaid'
+        width='120px' cell={cellWithCheckBox(this.itemChange, 'pp')} />
       <Column field='description' title='Description' width='200px' />
       <Column field='model' title='Model' width='200px' />
       <Column field='lpn' title='LPN' width='200px' />
@@ -361,7 +396,7 @@ const cellWithLink = function (basePath) {
       if (id !== undefined) {
         value = "..." + this.props.dataItem.providerId;
       }
-      console.log('[cellWithLink] link:', link, 'id:', id);
+      console.log('[Repair.cellWithLink] link:', link, 'id:', id);
       return (<td>
         <a target='_blank' rel='noopener noreferrer' href={link}>{value}</a>
       </td>
