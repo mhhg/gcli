@@ -14,6 +14,8 @@ import "simple-line-icons/css/simple-line-icons.css";
 import "./scss/style.css";
 // import "../node_modules/@progress/kendo-theme-material/dist/all.css";
 import "../node_modules/@progress/kendo-theme-default/dist/all.css";
+import "../node_modules/bootstrap-v4-rtl/dist/css/bootstrap-rtl.min.css";
+
 // Containers
 import { DefaultLayout } from "./containers";
 // Pages

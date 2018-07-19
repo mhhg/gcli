@@ -205,7 +205,42 @@ class Provider extends React.Component {
       filterable={true} filter={this.state.filter} filterChange={this.filterChange}
       pageChange={this.onPageChange.bind(this)} skip={this.state.skip} total={this.state.total}
       pageable={this.state.pagerState} pageSize={this.state.pageSize}
-      sort={this.state.sort} sortChange={this.sortChange}
+      sort={this.state.sort} sortChange={this.sortChange} tools= {[
+          "bold",
+          "italic",
+          "underline",
+          "strikethrough",
+          "justifyLeft",
+          "justifyCenter",
+          "justifyRight",
+          "justifyFull",
+          "insertUnorderedList",
+          "insertOrderedList",
+          "indent",
+          "outdent",
+          "createLink",
+          "unlink",
+          "insertImage",
+          "insertFile",
+          "subscript",
+          "superscript",
+          "tableWizard",
+          "createTable",
+          "addRowAbove",
+          "addRowBelow",
+          "addColumnLeft",
+          "addColumnRight",
+          "deleteRow",
+          "deleteColumn",
+          "viewHtml",
+          "formatting",
+          "cleanFormatting",
+          "fontName",
+          "fontSize",
+          "foreColor",
+          "backColor",
+          "print"
+      ]}
       sortable={{ allowUnsort: this.state.allowUnsort, mode: this.state.multiple ? 'multiple' : 'single' }}>
       <GridToolbar><button onClick={this.insert} className="k-button">Add New</button></GridToolbar>
       <Column title="" editable={false} sortable={false} filterable={false} cell={cellWithEditing(this.edit, this.remove)} width="169px" />
@@ -260,14 +295,21 @@ class Provider extends React.Component {
             checked={this.state.docInEdit.isConfirmed || ''} onChange={this.onDialogInputChange} />
           <label className="k-checkbox-label" htmlFor="ch1">IsConfirmed<br /></label>
         </div>
-        <div style={{ marginBottom: '1rem' }} className="col-md-6"><label>Description<br />
-          <Editor name='description'  height={500} value={this.state.docInEdit.description || ''} change={this.onDialogInputChange} />
+        <div style={{ marginBottom: '1rem' }} className="col-md-6"><label>Description</label>
+          <Editor name='description' value={this.state.docInEdit.description || ''} change={this.onDialogInputChange} tools= {[
+"bold","italic", "underline", "strikethrough", "justifyLeft", "justifyCenter", "justifyRight", "justifyFull",
+"insertUnorderedList", "insertOrderedList", "indent", "outdent", "createLink", "unlink", "insertImage", "insertFile",
+"tableWizard", "createTable", "addRowAbove", "addRowBelow", "addColumnLeft", "addColumnRight", "deleteRow", "deleteColumn", "viewHtml", "formatting",
+"cleanFormatting", "fontName", "fontSize", "foreColor", "backColor"
+            ]}/>
           {/* <Input className="form-control" type="text" name="description" value={this.state.docInEdit.description || ''} onChange={this.onDialogInputChange} /> */}
-        </label>
         </div>
-        <div style={{ marginBottom: '1rem' }} className="col-md-6"><label>Advertisement<br />
-          <Editor name='advertisement' height={500} value={this.state.docInEdit.advertisement || ''} change={this.onDialogInputChange} />
-        </label>
+        <div style={{ marginBottom: '1rem' }} className="col-md-6"><label>Advertisement</label>
+          <Editor name='advertisement' value={this.state.docInEdit.advertisement || ''} change={this.onDialogInputChange} tools= {[
+"bold","italic", "underline", "strikethrough", "justifyLeft", "justifyCenter", "justifyRight", "justifyFull",
+"insertUnorderedList", "insertOrderedList", "indent", "outdent", "createLink", "unlink", "insertImage", "insertFile",
+"tableWizard", "createTable", "addRowAbove", "addRowBelow", "addColumnLeft", "addColumnRight", "deleteRow", "deleteColumn", "viewHtml", "formatting",
+"cleanFormatting", "fontName", "fontSize", "foreColor", "backColor" ]}/>
         </div>
       </form>
     </Dialog>

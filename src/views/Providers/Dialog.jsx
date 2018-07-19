@@ -2,8 +2,8 @@ import React from 'react';
 
 export default class Dialog extends React.Component {
   render() {
-    return (<div className="k-dialog-wrapper"><div className="k-overlay" />
-      <div className="col-md-10 k-widget k-window k-dialog">
+    return (<div className="k-dialog-wrapper k-rtl rtl"><div className="k-overlay" />
+      <div className="col-md-11 k-widget k-window k-dialog">
         <div className="k-window-titlebar k-dialog-titlebar k-header">
           <div className="k-window-title k-dialog-title">{this.props.title}</div>
           <div className="k-window-actions k-dialog-actions">

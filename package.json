@@ -29,6 +29,7 @@
     "@progress/kendo-theme-material": "^1.0.0",
     "@progress/kendo-ui": "^2018.2.704",
     "bootstrap": "^4.1.1",
+    "bootstrap-v4-rtl": "^4.1.1-0",
     "chart.js": "^2.7.2",
     "classnames": "^2.2.5",
     "core-js": "^2.5.6",
