@@ -11,7 +11,7 @@ import DefaultHeader from "./DefaultHeader";
 
 class DefaultLayout extends Component {
   render() {
-    const main = (<main className="main k-rt">
+    const main = (<main className="main ">
       <AppBreadcrumb appRoutes={routes} />
       <Container fluid>
         <Switch>{routes.map((route, idx) => {
