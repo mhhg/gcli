@@ -1,3 +1,7 @@
+import React from 'react';
+import { GridCell } from "@progress/kendo-react-grid";
+
+
 const cellWithLink = function(basePath) {
     return class extends GridCell {
         render() {

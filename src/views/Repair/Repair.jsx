@@ -7,7 +7,7 @@ import React from "react";
 import { Card, CardBody, CardHeader, Col, Collapse, Fade } from "reactstrap";
 import Server from "../../config";
 import Socket from "../../socket";
-import cellWithLink from "./LinkCell";
+import cellWithLink from "./ProviderLinkCell";
 import cellWithSMS from "./SendSMSCell";
 
 class Repair extends React.Component {

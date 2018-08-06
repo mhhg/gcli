@@ -1,3 +1,4 @@
+import React from 'react';
 import { GridCell } from "@progress/kendo-react-grid";
 
 const cellWithSMS = function(smsSender) {
@@ -34,3 +35,5 @@ const cellWithSMS = function(smsSender) {
         }
     };
 };
+
+export default cellWithSMS;
