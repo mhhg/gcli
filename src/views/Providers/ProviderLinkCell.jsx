@@ -4,11 +4,11 @@ import { GridCell } from "@progress/kendo-react-grid";
 const cellWithLink = function(basePath) {
   return class extends GridCell {
     render() {
-      let link = basePath + this.props.dataItem.providerId,
+      let link = basePath + this.props.dataItem.id,
         value = "";
-      const id = this.props.dataItem.providerId;
+      const id = this.props.dataItem.id;
       if (id !== undefined) {
-        value = "..." + this.props.dataItem.providerId;
+        value = "..." + this.props.dataItem.id;
       }
       console.log("[Repair.cellWithLink] link:", link, "id:", id);
       return (
